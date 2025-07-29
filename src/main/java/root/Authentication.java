@@ -17,9 +17,10 @@ public class Authentication extends SessionManager {
 
     @PostMapping
     public boolean authenticate(@RequestBody @Valid User dto, HttpSession session) {
-        boolean ok = userRepo.findAll().stream().anyMatch(item -> item.id.equals(dto.id) && item.pw.equals(dto.pw));
-        if(ok) session.setAttribute(ak, dto.n);
-        return ok;
+        User requester = userRepo.findAll().stream().filter(item -> item.id.equals(dto.id) && item.pw.equals(dto.pw)).findFirst().orElse(null);
+        if(requester == null) return false;
+        session.setAttribute(ak, requester.n);
+        return true;
     }
     @GetMapping
     public boolean check(HttpSession session) {
