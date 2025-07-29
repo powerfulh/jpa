@@ -2,10 +2,7 @@ package root;
 
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import root.entity.User;
 import root.repo.UserRepo;
 
@@ -25,5 +22,9 @@ public class Authentication {
         boolean ok = userRepo.findAll().stream().anyMatch(item -> item.id.equals(dto.id) && item.pw.equals(dto.pw));
         if(ok) session.setAttribute(ak, dto.n);
         return ok;
+    }
+    @GetMapping
+    public boolean check(HttpSession session) {
+        return session.getAttribute(ak) != null;
     }
 }
