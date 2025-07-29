@@ -8,9 +8,7 @@ import root.repo.UserRepo;
 
 @RestController
 @RequestMapping("/authentication")
-public class Authentication {
-    final String ak = "AK";
-
+public class Authentication extends SessionManager {
     final UserRepo userRepo;
 
     public Authentication(UserRepo userRepo) {

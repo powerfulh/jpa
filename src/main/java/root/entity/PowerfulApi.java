@@ -14,6 +14,6 @@ public class PowerfulApi {
     String name;
     @NotBlank
     String data;
-    int owner;
+    public int owner;
     LocalDateTime updated_date;
 }
