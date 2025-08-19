@@ -1,5 +1,6 @@
 package root.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,5 +21,6 @@ public class Medicine {
     public String medicine;
     @NotNull
     public Integer price;
-    LocalDateTime updated_date = LocalDateTime.now();
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    LocalDateTime updatedDate = LocalDateTime.now();
 }

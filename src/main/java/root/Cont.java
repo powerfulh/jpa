@@ -20,6 +20,10 @@ public class Cont {
         this.testRepo = testRepo;
     }
 
+    @GetMapping("/med")
+    public List<Medicine> getMedicine() {
+        return medicineRepo.findAll();
+    }
     @PostMapping
     public void saveMedicine(@RequestBody @Valid Medicine dto) {
         medicineRepo.save(dto);
