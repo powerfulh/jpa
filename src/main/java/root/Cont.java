@@ -6,6 +6,7 @@ import root.entity.Medicine;
 import root.entity.TestTable;
 import root.repo.MedicineRepo;
 import root.repo.TestRepo;
+import root.service.RenameMe;
 
 import java.util.List;
 
@@ -15,9 +16,12 @@ public class Cont {
     final MedicineRepo medicineRepo;
     final TestRepo testRepo;
 
-    public Cont(MedicineRepo medicineRepo, TestRepo testRepo) {
+    final RenameMe renameMe;
+
+    public Cont(MedicineRepo medicineRepo, TestRepo testRepo, RenameMe renameMe) {
         this.medicineRepo = medicineRepo;
         this.testRepo = testRepo;
+        this.renameMe = renameMe;
     }
 
     @GetMapping("/med")
@@ -35,5 +39,9 @@ public class Cont {
     @GetMapping("/test")
     public List<TestTable> getTest() {
         return testRepo.findAll();
+    }
+    @GetMapping("/levenshtein/{src}/{target}")
+    public int getLevenshteinDistance(@PathVariable String src, @PathVariable String target) {
+        return renameMe.levenshteinDistance(src, target);
     }
 }
