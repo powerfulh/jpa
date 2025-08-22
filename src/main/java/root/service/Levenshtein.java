@@ -3,7 +3,7 @@ package root.service;
 import org.springframework.stereotype.Service;
 
 @Service
-public class RenameMe {
+public class Levenshtein {
     public int levenshteinDistance(String source, String target) {
         int sourceLen = source.length();
         int targetLen = target.length();
