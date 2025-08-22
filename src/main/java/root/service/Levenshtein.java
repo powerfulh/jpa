@@ -2,9 +2,49 @@ package root.service;
 
 import org.springframework.stereotype.Service;
 
+/**
+ * @author Chat gpt
+ */
 @Service
 public class Levenshtein {
+    String decomposeHangul(String input) {
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < input.length(); i++) {
+            char ch = input.charAt(i);
+
+            if (ch >= 0xAC00 && ch <= 0xD7A3) {  // 한글 완성형 영역
+                int base = ch - 0xAC00;
+
+                int initial = base / (21 * 28);      // 초성
+                int medial = (base % (21 * 28)) / 28; // 중성
+                int finalConsonant = base % 28;       // 종성
+
+                char[] initials = {
+                        'ᄀ','ᄁ','ᄂ','ᄃ','ᄄ','ᄅ','ᄆ','ᄇ','ᄈ','ᄉ','ᄊ','ᄋ','ᄌ','ᄍ','ᄎ','ᄏ','ᄐ','ᄑ','ᄒ'
+                };
+                char[] medials = {
+                        'ᅡ','ᅢ','ᅣ','ᅤ','ᅥ','ᅦ','ᅧ','ᅨ','ᅩ','ᅪ','ᅫ','ᅬ','ᅭ','ᅮ','ᅯ','ᅰ','ᅱ','ᅲ','ᅳ','ᅴ','ᅵ'
+                };
+                char[] finals = {
+                        '\0','ᆨ','ᆩ','ᆪ','ᆫ','ᆬ','ᆭ','ᆮ','ᆯ','ᆰ','ᆱ','ᆲ','ᆳ','ᆴ','ᆵ','ᆶ','ᆷ','ᆸ','ᆹ','ᆺ','ᆻ','ᆼ','ᆽ','ᆾ','ᆿ','ᇀ','ᇁ','ᇂ'
+                };
+
+                sb.append(initials[initial]);
+                sb.append(medials[medial]);
+                if (finalConsonant != 0) {
+                    sb.append(finals[finalConsonant]);
+                }
+            } else {
+                sb.append(ch); // 한글 아닌 글자는 그대로
+            }
+        }
+
+        return sb.toString();
+    }
     public int levenshteinDistance(String source, String target) {
+        source = decomposeHangul(source);
+        target = decomposeHangul(target);
         int sourceLen = source.length();
         int targetLen = target.length();
 
