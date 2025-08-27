@@ -1,4 +1,4 @@
-package root.entity;
+package root.entity.plm;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

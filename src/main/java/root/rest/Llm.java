@@ -4,7 +4,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import root.entity.LlmWord;
+import root.entity.plm.LlmWord;
 import root.repo.LlmWordRepo;
 
 import java.util.List;

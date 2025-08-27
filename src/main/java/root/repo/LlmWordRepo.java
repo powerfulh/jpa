@@ -1,7 +1,7 @@
 package root.repo;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import root.entity.LlmWord;
+import root.entity.plm.LlmWord;
 
 import java.util.List;
 
