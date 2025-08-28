@@ -2,7 +2,7 @@ package root.rest;
 
 import org.springframework.web.bind.annotation.*;
 import root.entity.plm.LlmWord;
-import root.repo.LlmWordRepo;
+import root.repo.plm.LlmWordRepo;
 import root.service.PlmCore;
 
 import java.util.List;

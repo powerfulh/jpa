@@ -4,17 +4,20 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import root.entity.plm.LlmWord;
 import root.entity.plm.PlmLearn;
-import root.repo.LlmWordRepo;
-import root.repo.PlmLearnRepo;
+import root.repo.plm.LlmWordCompoundRepo;
+import root.repo.plm.LlmWordRepo;
+import root.repo.plm.PlmLearnRepo;
 
 @Service
 public class PlmCore {
     final LlmWordRepo llmWordRepo;
     final PlmLearnRepo plmLearnRepo;
+    final LlmWordCompoundRepo llmWordCompoundRepo;
 
-    public PlmCore(LlmWordRepo llmWordRepo, PlmLearnRepo plmLearnRepo) {
+    public PlmCore(LlmWordRepo llmWordRepo, PlmLearnRepo plmLearnRepo, LlmWordCompoundRepo llmWordCompoundRepo) {
         this.llmWordRepo = llmWordRepo;
         this.plmLearnRepo = plmLearnRepo;
+        this.llmWordCompoundRepo = llmWordCompoundRepo;
     }
 
     void learn(String w, String src) {
@@ -35,9 +38,18 @@ public class PlmCore {
                 for (int ii = 0; ii < item.length(); ii++) {
                     var cut = item.length() - 1 - ii;
                     var current = item.substring(cut);
-                    var frontWord = item.substring(0, cut);
                     w = llmWordRepo.findAllByWord(current);
                     if(w.isEmpty()) continue;
+                    for (var wi: w) {
+                        for (var rw: llmWordCompoundRepo.findByRightword(wi.getN())) {
+                            var c = llmWordRepo.findById(rw.word).orElseThrow().getWord();
+                            if(item.endsWith(c)) {
+                                learn(item.substring(0, item.length() - c.length()), input);
+                                continue token;
+                            }
+                        }
+                    }
+                    var frontWord = item.substring(0, cut);
                     learn(frontWord, input);
                     continue token;
                 }
