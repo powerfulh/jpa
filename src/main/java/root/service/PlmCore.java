@@ -21,21 +21,20 @@ public class PlmCore {
     }
 
     void learn(String w, String src) {
-        if(llmWordRepo.findAllByWord(w).isEmpty()) {
-            var nw = new LearnWord();
-            nw.set(w);
-            var l = new PlmLearn();
-            l.word = llmWordRepo.save(LlmWord.to(nw)).getN();
-            l.src = src;
-            plmLearnRepo.save(l);
-        }
+        var nw = new LearnWord();
+        nw.set(w);
+        var l = new PlmLearn();
+        l.word = llmWordRepo.save(LlmWord.to(nw)).getN();
+        l.src = src;
+        plmLearnRepo.save(l);
     }
     @Transactional
     public void learn(String input) {
         token: for(var item: input.split(" ")) {
             var w = llmWordRepo.findAllByWord(item);
             if(w.isEmpty()) {
-                for (int ii = 0; ii < item.length(); ii++) {
+                String target = item;
+                nextCut: for (int ii = 0; ii < item.length(); ii++) {
                     var cut = item.length() - 1 - ii;
                     var current = item.substring(cut);
                     w = llmWordRepo.findAllByWord(current);
@@ -44,16 +43,17 @@ public class PlmCore {
                         for (var rw: llmWordCompoundRepo.findByRightword(wi.getN())) {
                             var c = llmWordRepo.findById(rw.word).orElseThrow().getWord();
                             if(item.endsWith(c)) {
-                                learn(item.substring(0, item.length() - c.length()), input);
-                                continue token;
+                                target = item.substring(0, item.length() - c.length());
+                                if(!llmWordRepo.findAllByWord(target).isEmpty()) continue token;
+                                ii += c.length() - wi.getWord().length();
+                                continue nextCut;
                             }
                         }
                     }
-                    var frontWord = item.substring(0, cut);
-                    learn(frontWord, input);
-                    continue token;
+                    target = item.substring(0, cut);
+                    if(!llmWordRepo.findAllByWord(target).isEmpty()) continue token;
                 }
-                learn(item, input);
+                learn(target, input);
             }
         }
     }
