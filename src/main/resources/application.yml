@@ -4,3 +4,7 @@ spring:
     url: ${MARIADBDOMAIN}
     username: powerfulh
     password: ${MARIADBPASSWORD}
+
+logging:
+  pattern:
+    console: "%d{yyMMdd HH:mm:ss} %-5level %logger{36} - %msg [%thread]%n"
