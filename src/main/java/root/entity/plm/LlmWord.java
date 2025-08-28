@@ -10,8 +10,15 @@ public class LlmWord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Integer n;
-    String word;
-    String type;
+    protected String word;
+    protected String type;
+
+    public static LlmWord to(LlmWord from) {
+        var r = new LlmWord();
+        r.word = from.word;
+        r.type = from.type;
+        return r;
+    }
 
     public Integer getN() {
         return n;
