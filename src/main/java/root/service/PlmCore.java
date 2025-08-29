@@ -20,13 +20,25 @@ public class PlmCore {
         this.llmWordCompoundRepo = llmWordCompoundRepo;
     }
 
-    void learn(String w, String src) {
+    void learn(String w, String src, String rightword, String type) {
         var nw = new LearnWord();
-        nw.set(w);
+        nw.set(w, type);
         var l = new PlmLearn();
         l.word = llmWordRepo.save(LlmWord.to(nw)).getN();
         l.src = src;
+        l.rightword = rightword;
+        l.value = w;
         plmLearnRepo.save(l);
+    }
+    /**
+     * @return Token has been solved?
+     */
+    boolean learnCouple(String leftword, String rightword, String src) {
+        if(!llmWordRepo.findAllByWord(leftword).isEmpty()) {
+            learn(leftword.concat(rightword), src, null, "학습 결합");
+            return true;
+        }
+        return false;
     }
     @Transactional
     public void learn(String input) {
@@ -34,6 +46,7 @@ public class PlmCore {
             var w = llmWordRepo.findAllByWord(item);
             if(w.isEmpty()) {
                 String target = item;
+                String cutter = null;
                 nextCut: for (int ii = 0; ii < item.length(); ii++) {
                     int cut = item.length() - 1 - ii;
                     String current = item.substring(cut);
@@ -44,24 +57,25 @@ public class PlmCore {
                             var c = llmWordRepo.findById(rw.word).orElseThrow().getWord();
                             if(item.endsWith(c)) {
                                 target = item.substring(0, item.length() - c.length());
-                                if(!llmWordRepo.findAllByWord(target).isEmpty()) continue token;
+                                if(learnCouple(target, c, input)) continue token;
                                 ii += c.length() - wi.getWord().length();
                                 continue nextCut;
                             }
                         }
                     }
                     target = item.substring(0, cut);
-                    if(!llmWordRepo.findAllByWord(target).isEmpty()) continue token;
+                    if(learnCouple(target, current, input)) continue token;
+                    cutter = current;
                 }
-                learn(target, input);
+                learn(target, input, cutter, "학습");
             }
         }
     }
 }
 
 class LearnWord extends LlmWord {
-    void set(String lw) {
+    void set(String lw, String t) {
         word = lw;
-        type = "학습";
+        type = t;
     }
 }

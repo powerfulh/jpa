@@ -12,4 +12,6 @@ public class PlmLearn {
     Integer n;
     public int word;
     public String src;
+    public String rightword;
+    public String value;
 }
