@@ -47,7 +47,7 @@ public class PlmCore {
             if(w.isEmpty()) {
                 String target = item;
                 String cutter = null;
-                nextCut: for (int ii = 0; ii < item.length(); ii++) {
+                nextCut: for (int ii = 0; ii < item.length() - 1; ii++) {
                     int cut = item.length() - 1 - ii;
                     String current = item.substring(cut);
                     w = llmWordRepo.findAllByWord(current);
