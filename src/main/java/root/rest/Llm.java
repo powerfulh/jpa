@@ -26,4 +26,8 @@ public class Llm {
     public void learn(@RequestBody String src) {
         plmCore.learn(src);
     }
+    @PostMapping("learnbox")
+    public void learnBox() {
+        plmCore.learnSrcBox();
+    }
 }

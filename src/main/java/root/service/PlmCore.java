@@ -7,17 +7,20 @@ import root.entity.plm.PlmLearn;
 import root.repo.plm.LlmWordCompoundRepo;
 import root.repo.plm.LlmWordRepo;
 import root.repo.plm.PlmLearnRepo;
+import root.repo.plm.PlmSrcBoxRepo;
 
 @Service
 public class PlmCore {
     final LlmWordRepo llmWordRepo;
     final PlmLearnRepo plmLearnRepo;
     final LlmWordCompoundRepo llmWordCompoundRepo;
+    final PlmSrcBoxRepo plmSrcBoxRepo;
 
-    public PlmCore(LlmWordRepo llmWordRepo, PlmLearnRepo plmLearnRepo, LlmWordCompoundRepo llmWordCompoundRepo) {
+    public PlmCore(LlmWordRepo llmWordRepo, PlmLearnRepo plmLearnRepo, LlmWordCompoundRepo llmWordCompoundRepo, PlmSrcBoxRepo plmSrcBoxRepo) {
         this.llmWordRepo = llmWordRepo;
         this.plmLearnRepo = plmLearnRepo;
         this.llmWordCompoundRepo = llmWordCompoundRepo;
+        this.plmSrcBoxRepo = plmSrcBoxRepo;
     }
 
     void learn(String w, String src, String rightword, String type) {
@@ -70,6 +73,9 @@ public class PlmCore {
                 learn(target, input, cutter, "학습");
             }
         }
+    }
+    public void learnSrcBox() {
+        plmSrcBoxRepo.findAll().forEach(item -> learn(item.src));
     }
 }
 
