@@ -40,6 +40,6 @@ alter table plm_learn change leftword value varchar(20)
 ;
 create table plm_src_box(
 	n int primary key auto_increment,
-	src varchar(100) not null unique, -- plm_learn 도 디비버로 길이 늘려준다
+	src varchar(400) not null unique, -- plm_learn 도 디비버로 길이 늘려준다
 	updated_date datetime default now()
 );
