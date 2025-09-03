@@ -44,7 +44,7 @@ public class PlmCore {
      */
     boolean learnCouple(String leftword, String rightword, String src) {
         if(!llmWordRepo.findAllByWord(leftword).isEmpty()) {
-            learn(leftword.concat(rightword), src, null, "학습 결합");
+            learn(leftword.concat(rightword), src, rightword, "학습 결합");
             return true;
         }
         return false;
