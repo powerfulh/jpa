@@ -9,18 +9,24 @@ import root.repo.plm.LlmWordRepo;
 import root.repo.plm.PlmLearnRepo;
 import root.repo.plm.PlmSrcBoxRepo;
 
+import java.util.stream.Collectors;
+
 @Service
 public class PlmCore {
     final LlmWordRepo llmWordRepo;
     final PlmLearnRepo plmLearnRepo;
     final LlmWordCompoundRepo llmWordCompoundRepo;
     final PlmSrcBoxRepo plmSrcBoxRepo;
+    final ReplaceRepeatedChars replaceRepeatedChars;
 
-    public PlmCore(LlmWordRepo llmWordRepo, PlmLearnRepo plmLearnRepo, LlmWordCompoundRepo llmWordCompoundRepo, PlmSrcBoxRepo plmSrcBoxRepo) {
+    final String symbolType = "기호";
+
+    public PlmCore(LlmWordRepo llmWordRepo, PlmLearnRepo plmLearnRepo, LlmWordCompoundRepo llmWordCompoundRepo, PlmSrcBoxRepo plmSrcBoxRepo, ReplaceRepeatedChars replaceRepeatedChars) {
         this.llmWordRepo = llmWordRepo;
         this.plmLearnRepo = plmLearnRepo;
         this.llmWordCompoundRepo = llmWordCompoundRepo;
         this.plmSrcBoxRepo = plmSrcBoxRepo;
+        this.replaceRepeatedChars = replaceRepeatedChars;
     }
 
     void learn(String w, String src, String rightword, String type) {
@@ -43,36 +49,43 @@ public class PlmCore {
         }
         return false;
     }
-    @Transactional
-    public void learn(String input) {
-        token: for(var item: input.split(" ")) {
-            var w = llmWordRepo.findAllByWord(item);
-            if(w.isEmpty()) {
-                String target = item;
-                String cutter = null;
-                nextCut: for (int ii = 0; ii < item.length() - 1; ii++) {
-                    int cut = item.length() - 1 - ii;
-                    String current = item.substring(cut);
-                    w = llmWordRepo.findAllByWord(current);
-                    if(w.isEmpty()) continue;
-                    for (var wi: w) {
-                        for (var rw: llmWordCompoundRepo.findByRightword(wi.getN())) {
-                            var c = llmWordRepo.findById(rw.word).orElseThrow().getWord();
-                            if(item.endsWith(c)) {
-                                target = item.substring(0, item.length() - c.length());
-                                if(learnCouple(target, c, input)) continue token;
-                                ii += c.length() - wi.getWord().length();
-                                continue nextCut;
-                            }
+    void learn(String item, String input) {
+        var w = llmWordRepo.findAllByWord(item);
+        if(w.isEmpty()) {
+            String target = item;
+            String cutter = null;
+            nextCut: for (int ii = 0; ii < item.length() - 1; ii++) {
+                int cut = item.length() - 1 - ii;
+                String current = item.substring(cut);
+                w = llmWordRepo.findAllByWord(current);
+                if(w.isEmpty()) continue;
+                for (var wi: w) {
+                    for (var rw: llmWordCompoundRepo.findByRightword(wi.getN())) {
+                        var c = llmWordRepo.findById(rw.word).orElseThrow().getWord();
+                        if(item.endsWith(c)) {
+                            target = item.substring(0, item.length() - c.length());
+                            if(learnCouple(target, c, input)) return;
+                            ii += c.length() - wi.getWord().length();
+                            continue nextCut;
                         }
                     }
-                    target = item.substring(0, cut);
-                    if(learnCouple(target, current, input)) continue token;
-                    cutter = current;
                 }
-                learn(target, input, cutter, "학습");
+                if(w.size() == 1 && w.get(0).getType().equals(symbolType)) {
+                    learn(item.substring(0, cut), input);
+                    return;
+                }
+                target = item.substring(0, cut);
+                if(learnCouple(target, current, input)) return;
+                cutter = current;
             }
+            learn(target, input, cutter, "학습");
         }
+    }
+    @Transactional
+    public void learn(String input) {
+        var symbols = llmWordRepo.findByType(symbolType).stream().map(LlmWord::getWord).collect(Collectors.joining()).toCharArray();
+        String cleanInput = replaceRepeatedChars.replaceRepeatedChars(input, symbols);
+        for(var item: cleanInput.split(" ")) learn(item, input);
     }
     public void learnSrcBox() {
         plmSrcBoxRepo.findAll().forEach(item -> learn(item.src));

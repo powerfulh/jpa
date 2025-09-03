@@ -43,3 +43,13 @@ create table plm_src_box(
 	src varchar(400) not null unique, -- plm_learn 도 디비버로 길이 늘려준다
 	updated_date datetime default now()
 );
+create table plm_context(
+	n int primary key auto_increment,
+	leftword int not null,
+	rightword int not null,
+	cnt int default 1,
+	updated_date datetime default now(),
+	unique (leftword, rightword),
+	foreign key (leftword) references llm_word(n),
+	foreign key (rightword) references llm_word(n)
+);
