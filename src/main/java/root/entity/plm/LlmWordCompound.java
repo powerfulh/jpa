@@ -12,4 +12,13 @@ public class LlmWordCompound {
     Integer n;
     public int word;
     int rightword;
+    int leftword;
+
+    public int getRightword() {
+        return rightword;
+    }
+
+    public int getLeftword() {
+        return leftword;
+    }
 }
