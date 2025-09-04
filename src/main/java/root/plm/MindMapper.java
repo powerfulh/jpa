@@ -18,6 +18,6 @@ public class MindMapper {
     }
 
     public MindMap map(int n) {
-        return new MindMap(n, plmContextRepo.findAll(), llmWordRepo.findAll(), llmWordCompoundRepo.findAll(), null);
+        return MindMap.make(n, plmContextRepo.findAll(), llmWordRepo.findAll(), llmWordCompoundRepo.findAll());
     }
 }
