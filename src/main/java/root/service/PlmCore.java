@@ -8,9 +8,7 @@ import root.entity.plm.PlmLearn;
 import root.exception.PlmException;
 import root.repo.plm.*;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -116,32 +114,44 @@ public class PlmCore {
                 .mapToInt(PlmContext::getCnt).sum()).sum()
         );
     }
-    void separateToken(List<LlmWord> understandList, String src, final List<LlmWord> wordList) {
+    void separateToken(List<LlmWord> understandList, String src, final List<LlmWord> wordList, Map<String, List<LlmWord>> failHistory) {
         var contextList = plmContextRepo.findAll();
         var last = wordList.stream()
                 .filter(item -> item.getWord().equals(src))
                 .sorted(closerContext(understandList, contextList)).toList();
         if(last.isEmpty()) {
+            var h = failHistory.get(src);
             var sameList = wordList.stream()
-                    .filter(item -> src.startsWith(item.getWord()))
+                    .filter(item -> {
+                        if(src.startsWith(item.getWord())) return h == null || h.stream().noneMatch(hi -> Objects.equals(hi.getN(), item.getN()));
+                        return false;
+                    })
                     .sorted(closerContext(understandList, contextList)).toList();
-            if(sameList.isEmpty()) throw new PlmException("Fail understand word of " + understandList.size(), src);
+            if(sameList.isEmpty()) {
+                if(understandList.isEmpty()) throw new PlmException("Fail to understand", failHistory);
+                var backSrc = understandList.get(understandList.size() - 1).getWord().concat(src);
+                if(h == null) failHistory.put(backSrc, new ArrayList<>());
+                failHistory.get(backSrc).add(understandList.get(understandList.size() - 1));
+                separateToken(understandList.subList(0, understandList.size() - 1), backSrc, wordList, failHistory);
+                return;
+            }
             var current = sameList.get(sameList.size() - 1);
             understandList.add(current);
-            separateToken(understandList, src.substring(current.getWord().length()), wordList);
+            separateToken(understandList, src.substring(current.getWord().length()), wordList, failHistory);
         } else understandList.add(last.get(last.size() - 1));
     }
     public List<LlmWord> understand(String pureSrc) {
         final String src = pureSrc.replaceAll("\\s", "");
         var wordList = llmWordRepo.findAll();
         var openerList = wordList.stream().filter(item -> src.startsWith(item.getWord())).toList();
-        if (openerList.isEmpty()) throw new PlmException("Fail understand opening word", src);
+        if (openerList.isEmpty()) throw new PlmException("Fail to set the opening word", src);
         PlmException e = null;
+        Map<String, List<LlmWord>> failHistory = new HashMap<>();
         for (var opener: openerList) {
             List<LlmWord> sentence = new ArrayList<>();
             sentence.add(opener);
             try {
-                separateToken(sentence, src.substring(opener.getWord().length()), wordList);
+                separateToken(sentence, src.substring(opener.getWord().length()), wordList, failHistory);
                 return sentence;
             } catch (PlmException plmException) {
                 e = plmException;

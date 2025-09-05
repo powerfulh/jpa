@@ -14,7 +14,7 @@ public class Advice {
     public void handle(NoAuthenticationKey e) {}
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public Map<String, String> handle(PlmException e) {
+    public Map<String, Object> handle(PlmException e) {
         return e.info;
     }
 }
