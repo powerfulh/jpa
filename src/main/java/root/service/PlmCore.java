@@ -84,8 +84,23 @@ public class PlmCore {
     @Transactional
     public void learn(String input) {
         var symbols = llmWordRepo.findByType(symbolType).stream().map(LlmWord::getWord).collect(Collectors.joining()).toCharArray();
-        String cleanInput = replaceRepeatedChars.replaceRepeatedChars(input, symbols);
-        for(var item: cleanInput.split(" ")) learn(item, input);
+        String[] cleanInput = replaceRepeatedChars.replaceRepeatedChars(input, symbols).split(" ");
+        for(int i = 0; i < cleanInput.length; i++) {
+            String item = cleanInput[i];
+            int next = i + 1;
+            // '고' 로 끝났다는 것은 '고' 로 시작하는 공백을 포함한 토큰일 가능성이 있다 250905
+            if(item.charAt(item.length() - 1) == '고') {
+                String compoundNext = item.concat(" ").concat(cleanInput[next]);
+                boolean spacyToken = llmWordRepo.findByWordStartingWith("고 ").stream()
+                        .anyMatch(gi -> compoundNext.contains(gi.getWord()));
+                if(spacyToken) {
+                    learn(compoundNext, input);
+                    ++i;
+                    return;
+                }
+            }
+            learn(item, input);
+        }
     }
     public void learnSrcBox() {
         plmSrcBoxRepo.findAll().forEach(item -> learn(item.src));

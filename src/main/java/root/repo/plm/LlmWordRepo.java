@@ -8,4 +8,5 @@ import java.util.List;
 public interface LlmWordRepo extends JpaRepository<LlmWord, Integer> {
     List<LlmWord> findAllByWord(String word);
     List<LlmWord> findByType(String type);
+    List<LlmWord> findByWordStartingWith(String s);
 }
