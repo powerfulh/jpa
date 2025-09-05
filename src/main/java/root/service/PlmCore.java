@@ -122,13 +122,6 @@ public class PlmCore {
                 .filter(item -> item.getWord().equals(src))
                 .sorted(closerContext(understandList, contextList)).toList();
         if(last.isEmpty()) {
-            if(understandList.isEmpty()) {
-                // 일치하는 단어가 여러개 있을 테지만 일단 암거나 하나 잡고 가봄 250905
-                var current = wordList.stream().filter(item -> src.startsWith(item.getWord())).findAny().orElseThrow(() -> new PlmException("Fail understand opening word", src));
-                understandList.add(current);
-                separateToken(understandList, src.substring(current.getWord().length()), wordList);
-                return;
-            }
             var sameList = wordList.stream()
                     .filter(item -> src.startsWith(item.getWord()))
                     .sorted(closerContext(understandList, contextList)).toList();
@@ -138,11 +131,23 @@ public class PlmCore {
             separateToken(understandList, src.substring(current.getWord().length()), wordList);
         } else understandList.add(last.get(last.size() - 1));
     }
-    public List<LlmWord> understand(String src) {
+    public List<LlmWord> understand(String pureSrc) {
+        final String src = pureSrc.replaceAll("\\s", "");
         var wordList = llmWordRepo.findAll();
-        List<LlmWord> sentence = new ArrayList<>();
-        separateToken(sentence, src.replaceAll("\\s", ""), wordList);
-        return sentence;
+        var openerList = wordList.stream().filter(item -> src.startsWith(item.getWord())).toList();
+        if (openerList.isEmpty()) throw new PlmException("Fail understand opening word", src);
+        PlmException e = null;
+        for (var opener: openerList) {
+            List<LlmWord> sentence = new ArrayList<>();
+            sentence.add(opener);
+            try {
+                separateToken(sentence, src.substring(opener.getWord().length()), wordList);
+                return sentence;
+            } catch (PlmException plmException) {
+                e = plmException;
+            }
+        }
+        throw e;
     }
 }
 
