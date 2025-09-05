@@ -38,4 +38,8 @@ public class Llm {
     public MindMap getMindMap(@PathVariable int n) {
         return mindMapper.map(n);
     }
+    @GetMapping("/understand")
+    public List<LlmWord> understand(String src) {
+        return plmCore.understand(src);
+    }
 }

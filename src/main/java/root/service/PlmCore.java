@@ -3,12 +3,14 @@ package root.service;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import root.entity.plm.LlmWord;
+import root.entity.plm.PlmContext;
 import root.entity.plm.PlmLearn;
-import root.repo.plm.LlmWordCompoundRepo;
-import root.repo.plm.LlmWordRepo;
-import root.repo.plm.PlmLearnRepo;
-import root.repo.plm.PlmSrcBoxRepo;
+import root.exception.PlmException;
+import root.repo.plm.*;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -18,15 +20,17 @@ public class PlmCore {
     final LlmWordCompoundRepo llmWordCompoundRepo;
     final PlmSrcBoxRepo plmSrcBoxRepo;
     final ReplaceRepeatedChars replaceRepeatedChars;
+    final PlmContextRepo plmContextRepo;
 
     final String symbolType = "기호";
 
-    public PlmCore(LlmWordRepo llmWordRepo, PlmLearnRepo plmLearnRepo, LlmWordCompoundRepo llmWordCompoundRepo, PlmSrcBoxRepo plmSrcBoxRepo, ReplaceRepeatedChars replaceRepeatedChars) {
+    public PlmCore(LlmWordRepo llmWordRepo, PlmLearnRepo plmLearnRepo, LlmWordCompoundRepo llmWordCompoundRepo, PlmSrcBoxRepo plmSrcBoxRepo, ReplaceRepeatedChars replaceRepeatedChars, PlmContextRepo plmContextRepo) {
         this.llmWordRepo = llmWordRepo;
         this.plmLearnRepo = plmLearnRepo;
         this.llmWordCompoundRepo = llmWordCompoundRepo;
         this.plmSrcBoxRepo = plmSrcBoxRepo;
         this.replaceRepeatedChars = replaceRepeatedChars;
+        this.plmContextRepo = plmContextRepo;
     }
 
     void learn(String w, String src, String rightword, String type) {
@@ -104,6 +108,41 @@ public class PlmCore {
     }
     public void learnSrcBox() {
         plmSrcBoxRepo.findAll().forEach(item -> learn(item.src));
+    }
+
+    Comparator<LlmWord> closerContext(List<LlmWord> understandList, List<PlmContext> contextList) {
+        return Comparator.comparing(item -> understandList.stream().mapToInt(ui -> contextList.stream()
+                .filter(ci -> ci.getLeftword() == ui.getN() && ci.getRightword() == item.getN())
+                .mapToInt(PlmContext::getCnt).sum()).sum()
+        );
+    }
+    void separateToken(List<LlmWord> understandList, String src, final List<LlmWord> wordList) {
+        var contextList = plmContextRepo.findAll();
+        var last = wordList.stream()
+                .filter(item -> item.getWord().equals(src))
+                .sorted(closerContext(understandList, contextList)).toList();
+        if(last.isEmpty()) {
+            if(understandList.isEmpty()) {
+                // 일치하는 단어가 여러개 있을 테지만 일단 암거나 하나 잡고 가봄 250905
+                var current = wordList.stream().filter(item -> src.startsWith(item.getWord())).findAny().orElseThrow(() -> new PlmException("Fail understand opening word", src));
+                understandList.add(current);
+                separateToken(understandList, src.substring(current.getWord().length()), wordList);
+                return;
+            }
+            var sameList = wordList.stream()
+                    .filter(item -> src.startsWith(item.getWord()))
+                    .sorted(closerContext(understandList, contextList)).toList();
+            if(sameList.isEmpty()) throw new PlmException("Fail understand word of " + understandList.size(), src);
+            var current = sameList.get(sameList.size() - 1);
+            understandList.add(current);
+            separateToken(understandList, src.substring(current.getWord().length()), wordList);
+        } else understandList.add(last.get(last.size() - 1));
+    }
+    public List<LlmWord> understand(String src) {
+        var wordList = llmWordRepo.findAll();
+        List<LlmWord> sentence = new ArrayList<>();
+        separateToken(sentence, src.replaceAll("\\s", ""), wordList);
+        return sentence;
     }
 }
 
