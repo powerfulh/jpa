@@ -159,6 +159,7 @@ public class PlmCore {
                 e = plmException;
             }
         }
+        // 싹 다 실패한 경우 나중에는 편집 거리로 리트해봐야겠지
         throw e;
     }
 }
