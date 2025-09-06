@@ -132,7 +132,8 @@ public class PlmCore {
                 var backSrc = understandList.get(understandList.size() - 1).getWord().concat(src);
                 if(h == null) failHistory.put(backSrc, new ArrayList<>());
                 failHistory.get(backSrc).add(understandList.get(understandList.size() - 1));
-                separateToken(understandList.subList(0, understandList.size() - 1), backSrc, wordList, failHistory);
+                understandList.remove(understandList.size() - 1);
+                separateToken(understandList, backSrc, wordList, failHistory);
                 return;
             }
             var current = sameList.get(sameList.size() - 1);
