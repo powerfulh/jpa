@@ -10,9 +10,9 @@ public class PlmContext {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Integer n;
-    int cnt;
-    int leftword;
-    int rightword;
+    public int cnt;
+    public int leftword;
+    public int rightword;
 
     public int getCnt() {
         return cnt;

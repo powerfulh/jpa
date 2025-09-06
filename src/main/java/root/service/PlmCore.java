@@ -131,7 +131,7 @@ public class PlmCore {
             if(sameList.isEmpty()) {
                 if(understandList.isEmpty()) throw new PlmException("Fail to understand", failHistory);
                 var backSrc = understandList.get(understandList.size() - 1).getWord().concat(src);
-                if(h == null) failHistory.put(backSrc, new ArrayList<>());
+                failHistory.computeIfAbsent(backSrc, k -> new ArrayList<>());
                 failHistory.get(backSrc).add(understandList.get(understandList.size() - 1));
                 understandList.remove(understandList.size() - 1);
                 separateToken(understandList, backSrc, wordList, failHistory);
@@ -161,6 +161,10 @@ public class PlmCore {
         }
         // 싹 다 실패한 경우 나중에는 편집 거리로 리트해봐야겠지
         throw e;
+    }
+
+    public void understandThenLearn(String pureSrc) {
+        understand(pureSrc).learnContext(plmContextRepo);
     }
 }
 

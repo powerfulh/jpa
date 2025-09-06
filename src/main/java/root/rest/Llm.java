@@ -27,11 +27,11 @@ public class Llm {
     public List<LlmWord> getWord(@PathVariable String w) {
         return llmWordRepo.findAllByWord(w);
     }
-    @PostMapping("learn")
+    @PostMapping("/learn")
     public void learn(@RequestBody String src) {
         plmCore.learn(src);
     }
-    @PostMapping("learnbox")
+    @PostMapping("/learnbox")
     public void learnBox() {
         plmCore.learnSrcBox();
     }
@@ -42,5 +42,9 @@ public class Llm {
     @GetMapping("/understand")
     public Sentence understand(String src) {
         return plmCore.understand(src);
+    }
+    @PostMapping("/learn/context")
+    public void learnContext(String src) {
+        plmCore.understandThenLearn(src);
     }
 }
