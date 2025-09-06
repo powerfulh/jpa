@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.*;
 import root.entity.plm.LlmWord;
 import root.plm.MindMap;
 import root.plm.MindMapper;
+import root.plm.Sentence;
 import root.repo.plm.LlmWordRepo;
 import root.service.PlmCore;
 
@@ -39,7 +40,7 @@ public class Llm {
         return mindMapper.map(n);
     }
     @GetMapping("/understand")
-    public List<LlmWord> understand(String src) {
+    public Sentence understand(String src) {
         return plmCore.understand(src);
     }
 }

@@ -6,6 +6,7 @@ import root.entity.plm.LlmWord;
 import root.entity.plm.PlmContext;
 import root.entity.plm.PlmLearn;
 import root.exception.PlmException;
+import root.plm.Sentence;
 import root.repo.plm.*;
 
 import java.util.*;
@@ -141,7 +142,7 @@ public class PlmCore {
             separateToken(understandList, src.substring(current.getWord().length()), wordList, failHistory);
         } else understandList.add(last.get(last.size() - 1));
     }
-    public List<LlmWord> understand(String pureSrc) {
+    public Sentence understand(String pureSrc) {
         final String src = pureSrc.replaceAll("\\s", "");
         var wordList = llmWordRepo.findAll();
         var openerList = wordList.stream().filter(item -> src.startsWith(item.getWord())).toList();
@@ -149,11 +150,11 @@ public class PlmCore {
         PlmException e = null;
         Map<String, List<LlmWord>> failHistory = new HashMap<>();
         for (var opener: openerList) {
-            List<LlmWord> sentence = new ArrayList<>();
-            sentence.add(opener);
+            List<LlmWord> understandList = new ArrayList<>();
+            understandList.add(opener);
             try {
-                separateToken(sentence, src.substring(opener.getWord().length()), wordList, failHistory);
-                return sentence;
+                separateToken(understandList, src.substring(opener.getWord().length()), wordList, failHistory);
+                return new Sentence(understandList);
             } catch (PlmException plmException) {
                 e = plmException;
             }
