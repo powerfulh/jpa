@@ -7,6 +7,7 @@ import root.entity.plm.PlmContext;
 import root.entity.plm.PlmLearn;
 import root.exception.PlmException;
 import root.plm.Sentence;
+import root.plm.StaticUtil;
 import root.repo.plm.*;
 
 import java.util.*;
@@ -109,24 +110,33 @@ public class PlmCore {
         plmSrcBoxRepo.findAll().forEach(item -> learn(item.src));
     }
 
+    int contextPoint(List<PlmContext> contextList, int lw, int rw) {
+        return contextList.stream().filter(StaticUtil.getContextFinder(lw, rw)).mapToInt(PlmContext::getCnt).sum();
+    }
     Comparator<LlmWord> closerContext(List<LlmWord> understandList, List<PlmContext> contextList) {
-        return Comparator.comparing(item -> understandList.stream().mapToInt(ui -> contextList.stream()
-                .filter(ci -> ci.getLeftword() == ui.getN() && ci.getRightword() == item.getN())
-                .mapToInt(PlmContext::getCnt).sum()).sum()
-        );
+        return Comparator.comparing(item -> understandList.stream().mapToInt(ui -> contextPoint(contextList, ui.getN(), item.getN())).sum());
     }
     void separateToken(List<LlmWord> understandList, String src, final List<LlmWord> wordList, Map<String, List<LlmWord>> failHistory, List<PlmContext> contextList, List<Sentence> sentenceList) {
         var last = wordList.stream()
                 .filter(item -> item.getWord().equals(src))
-                .sorted(closerContext(understandList, contextList)).toList(); // 파시블 올이면 정렬은 안 해도 된다, 나중에 성능이 아쉬우면 고려하자
+                .sorted(closerContext(understandList, contextList)).toList();
         if(last.isEmpty()) {
             var h = failHistory.get(src);
             var sameList = wordList.stream()
                     .filter(item -> {
-                        if(src.startsWith(item.getWord())) return h == null || h.stream().noneMatch(hi -> Objects.equals(hi.getN(), item.getN()));
+                        if(src.startsWith(item.getWord())) {
+                            if(!understandList.isEmpty()) {
+                                boolean noSense = contextPoint(contextList, understandList.get(understandList.size() - 1).getN(), item.getN()) < 1;
+                                if (noSense) return false;
+                            }
+                            if(h == null) return true;
+                            return h.stream().noneMatch(hi -> Objects.equals(hi.getN(), item.getN()));
+
+                        }
                         return false;
                     })
-                    .sorted(closerContext(understandList, contextList)).toList(); // 파시블 올이면 정렬은 안 해도 된다, 나중에 성능이 아쉬우면 고려하자
+//                    .sorted(closerContext(understandList, contextList))
+                    .toList();
             if(sameList.isEmpty()) {
                 if(understandList.isEmpty()) throw new PlmException("Fail to understand", failHistory);
                 var backSrc = understandList.get(understandList.size() - 1).getWord().concat(src);

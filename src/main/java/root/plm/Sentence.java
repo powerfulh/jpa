@@ -28,7 +28,7 @@ public class Sentence extends ArrayList<LlmWord> {
     }
 
     PlmContext getContext(int li, int ri, List<PlmContext> list) {
-        return list.stream().filter(item -> item.getLeftword() == get(li).getN() && item.getRightword() == get(ri).getN()).findAny().orElse(null);
+        return list.stream().filter(StaticUtil.getContextFinder(get(li).getN(), get(ri).getN())).findAny().orElse(null);
     }
     @Transactional
     public void learnContext(PlmContextRepo plmContextRepo) {
