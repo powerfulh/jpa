@@ -142,29 +142,31 @@ public class PlmCore {
             separateToken(understandList, src.substring(current.getWord().length()), wordList, failHistory);
         } else understandList.add(last.get(last.size() - 1));
     }
-    public Sentence understand(String pureSrc) {
+    public List<Sentence> understand(String pureSrc) {
         final String src = pureSrc.replaceAll("\\s", "");
         var wordList = llmWordRepo.findAll();
         var openerList = wordList.stream().filter(item -> src.startsWith(item.getWord())).toList();
         if (openerList.isEmpty()) throw new PlmException("Fail to set the opening word", src);
         PlmException e = null;
         Map<String, List<LlmWord>> failHistory = new HashMap<>();
+        List<Sentence> sentenceList = new ArrayList<>();
         for (var opener: openerList) {
             List<LlmWord> understandList = new ArrayList<>();
             understandList.add(opener);
             try {
                 separateToken(understandList, src.substring(opener.getWord().length()), wordList, failHistory);
-                return new Sentence(understandList);
+                sentenceList.add(new Sentence(understandList, plmContextRepo));
             } catch (PlmException plmException) {
                 e = plmException;
             }
         }
-        // 싹 다 실패한 경우 나중에는 편집 거리로 리트해봐야겠지
-        throw e;
+        if(sentenceList.isEmpty()) throw e; // 싹 다 실패한 경우 나중에는 편집 거리로 리트해봐야겠지
+        sentenceList.sort(Comparator.comparing(item -> item.getContextPoint() * -1));
+        return sentenceList;
     }
 
     public void understandThenLearn(String pureSrc) {
-        understand(pureSrc).learnContext(plmContextRepo);
+        understand(pureSrc).get(0).learnContext(plmContextRepo);
     }
 }
 

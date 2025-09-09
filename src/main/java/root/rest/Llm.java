@@ -9,6 +9,7 @@ import root.repo.plm.LlmWordRepo;
 import root.service.PlmCore;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/llm")
@@ -40,8 +41,8 @@ public class Llm {
         return mindMapper.map(n);
     }
     @GetMapping("/understand")
-    public Sentence understand(String src) {
-        return plmCore.understand(src);
+    public List<Map<String, Object>> understand(String src) {
+        return plmCore.understand(src).stream().map(Sentence::getDto).toList();
     }
     @PostMapping("/learn/context")
     public void learnContext(String src) {

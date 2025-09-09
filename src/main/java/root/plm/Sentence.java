@@ -6,26 +6,50 @@ import root.entity.plm.PlmContext;
 import root.repo.plm.PlmContextRepo;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Sentence extends ArrayList<LlmWord> {
-    public Sentence(List<LlmWord> list) {
+    final int contextPoint;
+
+    public Sentence(List<LlmWord> list, PlmContextRepo plmContextRepo) {
         super(list);
+        var contextList = plmContextRepo.findAll();
+        int p = 0;
+        for (int i = 0; i < size() - 1; i++) {
+            for (int ii = i + 1; ii < size() - 1; ii++) {
+                var context = getContext(i, ii, contextList);
+                if(context == null) continue;
+                p += context.getCnt();
+            }
+        }
+        contextPoint = p;
     }
 
+    PlmContext getContext(int li, int ri, List<PlmContext> list) {
+        return list.stream().filter(item -> item.getLeftword() == get(li).getN() && item.getRightword() == get(ri).getN()).findAny().orElse(null);
+    }
     @Transactional
     public void learnContext(PlmContextRepo plmContextRepo) {
+        var contextList = plmContextRepo.findAll();
         for (int i = 0; i < size() - 1; i++) {
-            int left = get(i).getN();
-            int right = get(i + 1).getN();
-            var contextList = plmContextRepo.findAll();
-            var context = contextList.stream().filter(item -> item.getLeftword() == left && item.getRightword() == right).findAny().orElse(null);
+            var context = getContext(i, i + 1, contextList);
             if(context == null) {
                 context = new PlmContext(); // 실시간 조정과는 다르게 0에서 출발
-                context.leftword = left;
-                context.rightword = right;
+                context.leftword = get(i).getN();
+                context.rightword = get(i + 1).getN();
                 plmContextRepo.save(context);
             } else context.cnt++;
         }
+    }
+    public int getContextPoint() {
+        return contextPoint;
+    }
+    public Map<String, Object> getDto() {
+        Map<String, Object> dto = new HashMap<>();
+        dto.put("point", contextPoint);
+        dto.put("list", this);
+        return dto;
     }
 }
