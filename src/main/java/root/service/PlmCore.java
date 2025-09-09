@@ -115,7 +115,7 @@ public class PlmCore {
                 .mapToInt(PlmContext::getCnt).sum()).sum()
         );
     }
-    void separateToken(List<LlmWord> understandList, String src, final List<LlmWord> wordList, Map<String, List<LlmWord>> failHistory, List<PlmContext> contextList, boolean possibleAll, List<Sentence> sentenceList) {
+    void separateToken(List<LlmWord> understandList, String src, final List<LlmWord> wordList, Map<String, List<LlmWord>> failHistory, List<PlmContext> contextList, List<Sentence> sentenceList) {
         var last = wordList.stream()
                 .filter(item -> item.getWord().equals(src))
                 .sorted(closerContext(understandList, contextList)).toList(); // 파시블 올이면 정렬은 안 해도 된다, 나중에 성능이 아쉬우면 고려하자
@@ -126,29 +126,22 @@ public class PlmCore {
                         if(src.startsWith(item.getWord())) return h == null || h.stream().noneMatch(hi -> Objects.equals(hi.getN(), item.getN()));
                         return false;
                     })
-                    .sorted(closerContext(understandList, contextList)).toList();
+                    .sorted(closerContext(understandList, contextList)).toList(); // 파시블 올이면 정렬은 안 해도 된다, 나중에 성능이 아쉬우면 고려하자
             if(sameList.isEmpty()) {
                 if(understandList.isEmpty()) throw new PlmException("Fail to understand", failHistory);
                 var backSrc = understandList.get(understandList.size() - 1).getWord().concat(src);
                 failHistory.computeIfAbsent(backSrc, k -> new ArrayList<>());
                 failHistory.get(backSrc).add(understandList.get(understandList.size() - 1));
                 understandList.remove(understandList.size() - 1);
-                separateToken(understandList, backSrc, wordList, failHistory, contextList, possibleAll, sentenceList);
+                separateToken(understandList, backSrc, wordList, failHistory, contextList, sentenceList);
                 return;
             }
             var current = sameList.get(sameList.size() - 1);
             understandList.add(current);
-            separateToken(understandList, src.substring(current.getWord().length()), wordList, failHistory, contextList, possibleAll, sentenceList);
+            separateToken(understandList, src.substring(current.getWord().length()), wordList, failHistory, contextList, sentenceList);
         } else {
-            if(possibleAll) last.forEach(item -> {
-               var clone = new ArrayList<>(understandList);
-               clone.add(item);
-               sentenceList.add(new Sentence(clone, plmContextRepo));
-            });
-            else {
-                understandList.add(last.get(last.size() - 1));
-                sentenceList.add(new Sentence(understandList, plmContextRepo));
-            }
+            understandList.add(last.get(last.size() - 1));
+            sentenceList.add(new Sentence(understandList, plmContextRepo));
         }
     }
     public List<Sentence> understand(String pureSrc) {
@@ -164,7 +157,7 @@ public class PlmCore {
             List<LlmWord> understandList = new ArrayList<>();
             understandList.add(opener);
             try {
-                separateToken(understandList, src.substring(opener.getWord().length()), wordList, failHistory, contextList, true, sentenceList);
+                separateToken(understandList, src.substring(opener.getWord().length()), wordList, failHistory, contextList, sentenceList);
             } catch (PlmException plmException) {
                 e = plmException;
             }
