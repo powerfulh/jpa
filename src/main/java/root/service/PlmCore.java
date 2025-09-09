@@ -115,8 +115,7 @@ public class PlmCore {
                 .mapToInt(PlmContext::getCnt).sum()).sum()
         );
     }
-    void separateToken(List<LlmWord> understandList, String src, final List<LlmWord> wordList, Map<String, List<LlmWord>> failHistory) {
-        var contextList = plmContextRepo.findAll();
+    void separateToken(List<LlmWord> understandList, String src, final List<LlmWord> wordList, Map<String, List<LlmWord>> failHistory, List<PlmContext> contextList) {
         var last = wordList.stream()
                 .filter(item -> item.getWord().equals(src))
                 .sorted(closerContext(understandList, contextList)).toList();
@@ -134,12 +133,12 @@ public class PlmCore {
                 failHistory.computeIfAbsent(backSrc, k -> new ArrayList<>());
                 failHistory.get(backSrc).add(understandList.get(understandList.size() - 1));
                 understandList.remove(understandList.size() - 1);
-                separateToken(understandList, backSrc, wordList, failHistory);
+                separateToken(understandList, backSrc, wordList, failHistory, contextList);
                 return;
             }
             var current = sameList.get(sameList.size() - 1);
             understandList.add(current);
-            separateToken(understandList, src.substring(current.getWord().length()), wordList, failHistory);
+            separateToken(understandList, src.substring(current.getWord().length()), wordList, failHistory, contextList);
         } else understandList.add(last.get(last.size() - 1));
     }
     public List<Sentence> understand(String pureSrc) {
@@ -150,11 +149,12 @@ public class PlmCore {
         PlmException e = null;
         Map<String, List<LlmWord>> failHistory = new HashMap<>();
         List<Sentence> sentenceList = new ArrayList<>();
+        var contextList = plmContextRepo.findAll();
         for (var opener: openerList) {
             List<LlmWord> understandList = new ArrayList<>();
             understandList.add(opener);
             try {
-                separateToken(understandList, src.substring(opener.getWord().length()), wordList, failHistory);
+                separateToken(understandList, src.substring(opener.getWord().length()), wordList, failHistory, contextList);
                 sentenceList.add(new Sentence(understandList, plmContextRepo));
             } catch (PlmException plmException) {
                 e = plmException;
