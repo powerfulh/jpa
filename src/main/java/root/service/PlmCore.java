@@ -125,17 +125,12 @@ public class PlmCore {
             var sameList = wordList.stream()
                     .filter(item -> {
                         if(src.startsWith(item.getWord())) {
-                            if(!understandList.isEmpty()) {
-                                boolean noSense = contextPoint(contextList, understandList.get(understandList.size() - 1).getN(), item.getN()) < 1;
-                                if (noSense) return false;
-                            }
                             if(h == null) return true;
                             return h.stream().noneMatch(hi -> Objects.equals(hi.getN(), item.getN()));
-
                         }
                         return false;
                     })
-//                    .sorted(closerContext(understandList, contextList))
+                    .sorted(closerContext(understandList, contextList))
                     .toList();
             if(sameList.isEmpty()) {
                 if(understandList.isEmpty()) throw new PlmException("Fail to understand", failHistory);
@@ -145,6 +140,15 @@ public class PlmCore {
                 understandList.remove(understandList.size() - 1);
                 separateToken(understandList, backSrc, wordList, failHistory, contextList, sentenceList);
                 return;
+            }
+            if(sameList.size() > 1 && !understandList.isEmpty()) {
+                sameList.subList(0, sameList.size() - 1).stream()
+                        .filter(item -> contextPoint(contextList, understandList.get(understandList.size() - 1).getN(), item.getN()) > 0)
+                        .forEach(item -> {
+                            var clone = new ArrayList<>(understandList);
+                            clone.add(item);
+                            separateToken(clone, src.substring(item.getWord().length()), wordList, failHistory, contextList, sentenceList);
+                        });
             }
             var current = sameList.get(sameList.size() - 1);
             understandList.add(current);
