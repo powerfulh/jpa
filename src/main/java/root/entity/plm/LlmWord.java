@@ -12,6 +12,7 @@ public class LlmWord {
     Integer n;
     protected String word;
     protected String type;
+    String memo;
 
     public static LlmWord to(LlmWord from) {
         var r = new LlmWord();
@@ -30,5 +31,9 @@ public class LlmWord {
 
     public String getType() {
         return type;
+    }
+
+    public String getMemo() {
+        return memo;
     }
 }
