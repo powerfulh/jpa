@@ -17,7 +17,7 @@ public class MindMap {
         word = selectWord(n, wordList);
         this.left = left == null ? word : left;
         history.add(n);
-        nextMap(list, wordList, compoundList, history);
+        if(history.size() < 10) nextMap(list, wordList, compoundList, history);
     }
     LlmWord selectWord(int n, List<LlmWord> data) {
         return data.stream().filter(item -> item.getN() == n).findAny().orElseThrow();
@@ -30,7 +30,7 @@ public class MindMap {
                         var hc = list.stream().filter(ci -> ci.getLeftword() == h && ci.getRightword() == item.getRightword()).findAny().orElse(null);
                         cnt += hc == null ? 0 : hc.getCnt();
                     }
-                    return cnt;
+                    return cnt * -1;
                 }))
                 .map(item -> {
                     var comp = compoundList.stream()
