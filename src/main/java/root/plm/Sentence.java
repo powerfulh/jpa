@@ -2,7 +2,10 @@ package root.plm;
 
 import root.entity.plm.LlmWord;
 import root.entity.plm.PlmContext;
+import root.entity.plm.PlmUnderstandBox;
+import root.entity.plm.PlmUnderstandBoxWord;
 import root.repo.plm.PlmContextRepo;
+import root.repo.plm.UnderstandBoxWordRepo;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,5 +52,14 @@ public class Sentence extends ArrayList<LlmWord> {
         dto.put("point", contextPoint);
         dto.put("list", this);
         return dto;
+    }
+    public void box(PlmUnderstandBox box, UnderstandBoxWordRepo understandBoxWordRepo) {
+        for (int i = 0; i < size(); i++) {
+            var word = new PlmUnderstandBoxWord();
+            word.understand = box.getN();
+            word.i = i;
+            word.word = get(i).getN();
+            understandBoxWordRepo.save(word);
+        }
     }
 }

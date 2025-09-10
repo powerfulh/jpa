@@ -48,4 +48,8 @@ public class Llm {
     public void learnContext(String src) {
         plmCore.understandThenLearn(src);
     }
+    @PostMapping("/understand/box")
+    public void understandBox() {
+        plmCore.understandBox();
+    }
 }

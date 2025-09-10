@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import root.entity.plm.LlmWord;
 import root.entity.plm.PlmContext;
 import root.entity.plm.PlmLearn;
+import root.entity.plm.PlmUnderstandBox;
 import root.exception.PlmException;
 import root.plm.Sentence;
 import root.plm.StaticUtil;
@@ -21,16 +22,20 @@ public class PlmCore {
     final PlmSrcBoxRepo plmSrcBoxRepo;
     final ReplaceRepeatedChars replaceRepeatedChars;
     final PlmContextRepo plmContextRepo;
+    final UnderstandBoxRepo understandBoxRepo;
+    final UnderstandBoxWordRepo understandBoxWordRepo;
 
     final String symbolType = "기호";
 
-    public PlmCore(LlmWordRepo llmWordRepo, PlmLearnRepo plmLearnRepo, LlmWordCompoundRepo llmWordCompoundRepo, PlmSrcBoxRepo plmSrcBoxRepo, ReplaceRepeatedChars replaceRepeatedChars, PlmContextRepo plmContextRepo) {
+    public PlmCore(LlmWordRepo llmWordRepo, PlmLearnRepo plmLearnRepo, LlmWordCompoundRepo llmWordCompoundRepo, PlmSrcBoxRepo plmSrcBoxRepo, ReplaceRepeatedChars replaceRepeatedChars, PlmContextRepo plmContextRepo, UnderstandBoxRepo understandBoxRepo, UnderstandBoxWordRepo understandBoxWordRepo) {
         this.llmWordRepo = llmWordRepo;
         this.plmLearnRepo = plmLearnRepo;
         this.llmWordCompoundRepo = llmWordCompoundRepo;
         this.plmSrcBoxRepo = plmSrcBoxRepo;
         this.replaceRepeatedChars = replaceRepeatedChars;
         this.plmContextRepo = plmContextRepo;
+        this.understandBoxRepo = understandBoxRepo;
+        this.understandBoxWordRepo = understandBoxWordRepo;
     }
 
     void learn(String w, String src, String rightword, String type) {
@@ -135,8 +140,10 @@ public class PlmCore {
             if(sameList.isEmpty()) {
                 if (src.startsWith("고") && !src.startsWith("고 ") && src.length() > 1) {
                     String retrySrc = "고 " + src.substring(1);
-                    separateToken(understandList, retrySrc, wordList, failHistory, contextList, sentenceList);
-                    return;
+                    try {
+                        separateToken(new ArrayList<>(understandList), retrySrc, wordList, failHistory, contextList, sentenceList);
+                        return;
+                    } catch (PlmException ignored) {}
                 }
                 if(understandList.isEmpty()) throw new PlmException("Fail to understand", failHistory);
                 String backSrc = understandList.get(understandList.size() - 1).getWord().concat(src);
@@ -189,6 +196,16 @@ public class PlmCore {
     @Transactional
     public void understandThenLearn(String pureSrc) {
         understand(pureSrc).get(0).learnContext(plmContextRepo);
+    }
+
+    @Transactional
+    public void understandBox() {
+        plmSrcBoxRepo.findAll().forEach(item -> {
+            var box = new PlmUnderstandBox();
+            box.src = item.src;
+            understandBoxRepo.save(box);
+            understand(item.src).get(0).box(box, understandBoxWordRepo);
+        });
     }
 }
 
