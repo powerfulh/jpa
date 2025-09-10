@@ -59,6 +59,7 @@ create table plm_understand_box(
 	updated_date datetime default now()
 );
 create table plm_understand_box_word(
+    n int primary key auto_increment,
 	understand int not null,
 	i int not null,
 	word int not null,
