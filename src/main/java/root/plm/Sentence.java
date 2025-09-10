@@ -18,7 +18,8 @@ public class Sentence extends ArrayList<LlmWord> {
     public Sentence(List<LlmWord> list, PlmContextRepo plmContextRepo) {
         super(list);
         var contextList = plmContextRepo.findAll();
-        int p = 0;
+        var openerContext = contextList.stream().filter(StaticUtil.getContextFinder(2903, get(0).getN())).findAny().orElse(null);
+        int p = openerContext == null ? 0 : openerContext.cnt;
         for (int i = 0; i < size() - 1; i++) {
             for (int ii = i + 1; ii < size() - 1; ii++) {
                 var context = getContext(i, ii, contextList);

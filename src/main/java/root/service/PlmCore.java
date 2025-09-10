@@ -121,6 +121,9 @@ public class PlmCore {
     Comparator<LlmWord> closerContext(List<LlmWord> understandList, List<PlmContext> contextList) {
         return Comparator.comparing(item -> understandList.stream().mapToInt(ui -> contextPoint(contextList, ui.getN(), item.getN())).sum());
     }
+    String nextSrc(String src, LlmWord word) {
+        return src.substring(word.getWord().replaceAll("\\s", "").length());
+    }
     void separateToken(List<LlmWord> understandList, String src, final List<LlmWord> wordList, Map<String, List<LlmWord>> failHistory, List<PlmContext> contextList, List<Sentence> sentenceList) {
         var last = wordList.stream()
                 .filter(item -> item.getWord().equals(src))
@@ -129,7 +132,7 @@ public class PlmCore {
             var h = failHistory.get(src);
             var sameList = wordList.stream()
                     .filter(item -> {
-                        if(src.startsWith(item.getWord())) {
+                        if(src.startsWith(item.getWord().replaceAll(" ", ""))) {
                             if(h == null) return true;
                             return h.stream().noneMatch(hi -> Objects.equals(hi.getN(), item.getN()));
                         }
@@ -138,15 +141,8 @@ public class PlmCore {
                     .sorted(closerContext(understandList, contextList))
                     .toList();
             if(sameList.isEmpty()) {
-                if (src.startsWith("고") && !src.startsWith("고 ") && src.length() > 1) {
-                    String retrySrc = "고 " + src.substring(1);
-                    try {
-                        separateToken(new ArrayList<>(understandList), retrySrc, wordList, failHistory, contextList, sentenceList);
-                        return;
-                    } catch (PlmException ignored) {}
-                }
                 if(understandList.isEmpty()) throw new PlmException("Fail to understand", failHistory);
-                String backSrc = understandList.get(understandList.size() - 1).getWord().concat(src);
+                String backSrc = understandList.get(understandList.size() - 1).getWord().concat(src).replaceAll("\\s", "");
                 failHistory.computeIfAbsent(backSrc, k -> new ArrayList<>());
                 failHistory.get(backSrc).add(understandList.get(understandList.size() - 1));
                 understandList.remove(understandList.size() - 1);
@@ -159,12 +155,12 @@ public class PlmCore {
                         .forEach(item -> {
                             var clone = new ArrayList<>(understandList);
                             clone.add(item);
-                            separateToken(clone, src.substring(item.getWord().length()), wordList, failHistory, contextList, sentenceList);
+                            separateToken(clone, nextSrc(src, item), wordList, failHistory, contextList, sentenceList);
                         });
             }
             var current = sameList.get(sameList.size() - 1);
             understandList.add(current);
-            separateToken(understandList, src.substring(current.getWord().length()), wordList, failHistory, contextList, sentenceList);
+            separateToken(understandList, nextSrc(src, current), wordList, failHistory, contextList, sentenceList);
         } else {
             understandList.add(last.get(last.size() - 1));
             sentenceList.add(new Sentence(understandList, plmContextRepo));
@@ -172,7 +168,7 @@ public class PlmCore {
     }
     public List<Sentence> understand(String pureSrc) {
         final String src = pureSrc.replaceAll("\\s", "");
-        var wordList = llmWordRepo.findAll();
+        var wordList = llmWordRepo.findByTypeNot("opener");
         var openerList = wordList.stream().filter(item -> src.startsWith(item.getWord())).toList();
         if (openerList.isEmpty()) throw new PlmException("Fail to set the opening word", src);
         PlmException e = null;
@@ -183,7 +179,7 @@ public class PlmCore {
             List<LlmWord> understandList = new ArrayList<>();
             understandList.add(opener);
             try {
-                separateToken(understandList, src.substring(opener.getWord().length()), wordList, failHistory, contextList, sentenceList);
+                separateToken(understandList, nextSrc(src, opener), wordList, failHistory, contextList, sentenceList);
             } catch (PlmException plmException) {
                 e = plmException;
             }
