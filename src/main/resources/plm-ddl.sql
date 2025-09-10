@@ -53,3 +53,16 @@ create table plm_context(
 	foreign key (leftword) references llm_word(n),
 	foreign key (rightword) references llm_word(n)
 );
+create table plm_understand_box(
+	n int primary key auto_increment,
+	src varchar(400) not null unique,
+	updated_date datetime default now()
+);
+create table plm_understand_box_word(
+	understand int not null,
+	i int not null,
+	word int not null,
+	updated_date datetime default now(),
+	unique(understand, i),
+	foreign key (understand) references plm_understand_box(n)
+);
