@@ -133,8 +133,13 @@ public class PlmCore {
                     .sorted(closerContext(understandList, contextList))
                     .toList();
             if(sameList.isEmpty()) {
+                if (src.startsWith("고") && !src.startsWith("고 ") && src.length() > 1) {
+                    String retrySrc = "고 " + src.substring(1);
+                    separateToken(understandList, retrySrc, wordList, failHistory, contextList, sentenceList);
+                    return;
+                }
                 if(understandList.isEmpty()) throw new PlmException("Fail to understand", failHistory);
-                var backSrc = understandList.get(understandList.size() - 1).getWord().concat(src);
+                String backSrc = understandList.get(understandList.size() - 1).getWord().concat(src);
                 failHistory.computeIfAbsent(backSrc, k -> new ArrayList<>());
                 failHistory.get(backSrc).add(understandList.get(understandList.size() - 1));
                 understandList.remove(understandList.size() - 1);
