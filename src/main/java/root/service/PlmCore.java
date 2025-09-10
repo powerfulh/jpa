@@ -181,6 +181,7 @@ public class PlmCore {
         return sentenceList;
     }
 
+    @Transactional
     public void understandThenLearn(String pureSrc) {
         understand(pureSrc).get(0).learnContext(plmContextRepo);
     }

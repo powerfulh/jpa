@@ -1,6 +1,5 @@
 package root.plm;
 
-import jakarta.transaction.Transactional;
 import root.entity.plm.LlmWord;
 import root.entity.plm.PlmContext;
 import root.repo.plm.PlmContextRepo;
@@ -30,7 +29,6 @@ public class Sentence extends ArrayList<LlmWord> {
     PlmContext getContext(int li, int ri, List<PlmContext> list) {
         return list.stream().filter(StaticUtil.getContextFinder(get(li).getN(), get(ri).getN())).findAny().orElse(null);
     }
-    @Transactional
     public void learnContext(PlmContextRepo plmContextRepo) {
         var contextList = plmContextRepo.findAll();
         for (int i = 0; i < size() - 1; i++) {
