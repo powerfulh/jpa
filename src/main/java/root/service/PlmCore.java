@@ -126,7 +126,7 @@ public class PlmCore {
     }
     void separateToken(List<LlmWord> understandList, String src, final List<LlmWord> wordList, Map<String, List<LlmWord>> failHistory, List<PlmContext> contextList, List<Sentence> sentenceList) {
         var last = wordList.stream()
-                .filter(item -> item.getWord().equals(src))
+                .filter(item -> item.getWord().replaceAll(" ", "").equals(src))
                 .sorted(closerContext(understandList, contextList)).toList();
         if(last.isEmpty()) {
             var h = failHistory.get(src);
