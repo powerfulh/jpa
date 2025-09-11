@@ -42,6 +42,7 @@ public class Sentence extends ArrayList<LlmWord> {
                 context.leftword = get(i).getN();
                 context.rightword = get(i + 1).getN();
                 plmContextRepo.save(context);
+                contextList.add(context);
             } else context.cnt++;
         }
     }
