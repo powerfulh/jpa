@@ -167,7 +167,8 @@ public class PlmCore {
         }
     }
     public List<Sentence> understand(String pureSrc) {
-        final String src = pureSrc.replaceAll("\\s", "");
+        var symbols = llmWordRepo.findByType(symbolType).stream().map(LlmWord::getWord).collect(Collectors.joining()).toCharArray();
+        final String src = replaceRepeatedChars.replaceRepeatedChars(pureSrc.replaceAll("\\s", ""), symbols);
         var wordList = llmWordRepo.findByTypeNot("opener");
         var openerList = wordList.stream().filter(item -> src.startsWith(item.getWord())).toList();
         if (openerList.isEmpty()) throw new PlmException("Fail to set the opening word", src);
