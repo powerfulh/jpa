@@ -196,6 +196,9 @@ public class PlmCore {
 
     @Transactional
     public void understandBox() {
+        understandBoxWordRepo.deleteAll();
+        understandBoxRepo.deleteAll();
+        understandBoxRepo.flush();
         plmSrcBoxRepo.findAll().forEach(item -> {
             var box = new PlmUnderstandBox();
             box.src = item.src;
