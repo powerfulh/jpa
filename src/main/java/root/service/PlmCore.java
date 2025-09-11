@@ -118,8 +118,9 @@ public class PlmCore {
     int contextPoint(List<PlmContext> contextList, int lw, int rw) {
         return contextList.stream().filter(StaticUtil.getContextFinder(lw, rw)).mapToInt(PlmContext::getCnt).sum();
     }
+    // 250911 PlmContext 는 전체 문맥을 같이 할수는 없어보이므로 연결 문맥만을 보기로 한다, 전체 문맥은 언젠가..
     Comparator<LlmWord> closerContext(List<LlmWord> understandList, List<PlmContext> contextList) {
-        return Comparator.comparing(item -> understandList.stream().mapToInt(ui -> contextPoint(contextList, ui.getN(), item.getN())).sum());
+        return Comparator.comparing(item -> understandList.isEmpty() ? 0 : contextPoint(contextList, understandList.get(understandList.size() - 1).getN(), item.getN()));
     }
     String nextSrc(String src, LlmWord word) {
         return src.substring(word.getWord().replaceAll("\\s", "").length());
