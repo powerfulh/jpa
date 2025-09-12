@@ -19,13 +19,11 @@ public class Sentence extends ArrayList<LlmWord> {
         super(list);
         var contextList = plmContextRepo.findAll();
         var openerContext = contextList.stream().filter(StaticUtil.getContextFinder(2903, get(0).getN())).findAny().orElse(null);
-        int p = openerContext == null ? 0 : openerContext.cnt;
+        int p = openerContext == null ? 0 : (openerContext.cnt * get(0).getWord().length());
         for (int i = 0; i < size() - 1; i++) {
-            for (int ii = i + 1; ii < size() - 1; ii++) {
-                var context = getContext(i, ii, contextList);
-                if(context == null) continue;
-                p += context.getCnt();
-            }
+            var context = getContext(i, i + 1, contextList);
+            if(context == null) continue;
+            p += context.getCnt() * (get(i).getWord().length() + get(i + 1).getWord().length());
         }
         contextPoint = p;
     }
