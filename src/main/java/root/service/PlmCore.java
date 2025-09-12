@@ -26,6 +26,7 @@ public class PlmCore {
     final UnderstandBoxWordRepo understandBoxWordRepo;
 
     final String symbolType = "기호";
+    final String learnedCompoundType = "학습 결합";
 
     public PlmCore(LlmWordRepo llmWordRepo, PlmLearnRepo plmLearnRepo, LlmWordCompoundRepo llmWordCompoundRepo, PlmSrcBoxRepo plmSrcBoxRepo, ReplaceRepeatedChars replaceRepeatedChars, PlmContextRepo plmContextRepo, UnderstandBoxRepo understandBoxRepo, UnderstandBoxWordRepo understandBoxWordRepo) {
         this.llmWordRepo = llmWordRepo;
@@ -49,20 +50,17 @@ public class PlmCore {
         plmLearnRepo.save(l);
     }
     /**
-     * @return Token has been solved?
+     * @return Token should be compounded
      */
-    boolean learnCouple(String leftword, String rightword, String src) {
-        if(!llmWordRepo.findAllByWord(leftword).isEmpty()) {
-            learn(leftword.concat(rightword), src, rightword, "학습 결합");
-            return true;
-        }
-        return false;
+    boolean learnCouple(String leftword) {
+        return !llmWordRepo.findAllByWord(leftword).isEmpty();
     }
     void learn(String item, String input) {
         var w = llmWordRepo.findAllByWord(item);
         if(w.isEmpty()) {
             String target = item;
             String cutter = null;
+            String type = "학습";
             nextCut: for (int ii = 0; ii < item.length() - 1; ii++) {
                 int cut = item.length() - 1 - ii;
                 String current = item.substring(cut);
@@ -70,10 +68,14 @@ public class PlmCore {
                 if(w.isEmpty()) continue;
                 for (var wi: w) {
                     for (var compound: llmWordCompoundRepo.findByRightword(wi.getN())) {
-                        var c = llmWordRepo.findById(compound.word).orElseThrow().getWord();
+                        String c = llmWordRepo.findById(compound.word).orElseThrow().getWord();
                         if(item.endsWith(c)) {
                             target = item.substring(0, item.length() - c.length());
-                            if(learnCouple(target, c, input)) return;
+                            if(learnCouple(target)) {
+                                // 이 경우 다음까지도 돌아봐야 하는 경우를 못 봐서 일단 바로 외워버리자
+                                learn(target.concat(c), input, c, learnedCompoundType);
+                                return;
+                            }
                             ii += c.length() - wi.getWord().length();
                             continue nextCut;
                         }
@@ -84,10 +86,13 @@ public class PlmCore {
                     return;
                 }
                 target = item.substring(0, cut);
-                if(learnCouple(target, current, input)) return;
                 cutter = current;
+                if(learnCouple(target)) {
+                    target = target.concat(current);
+                    type = learnedCompoundType;
+                }
             }
-            learn(target, input, cutter, "학습");
+            learn(target, input, cutter, type);
         }
     }
     @Transactional
