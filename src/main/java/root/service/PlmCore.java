@@ -71,9 +71,10 @@ public class PlmCore {
                         String c = llmWordRepo.findById(compound.word).orElseThrow().getWord();
                         if(item.endsWith(c)) {
                             target = item.substring(0, item.length() - c.length());
+                            cutter = c;
                             if(learnCouple(target)) {
                                 // 이 경우 다음까지도 돌아봐야 하는 경우를 못 봐서 일단 바로 외워버리자
-                                learn(target.concat(c), input, c, learnedCompoundType);
+                                learn(target.concat(c), input, cutter, learnedCompoundType);
                                 return;
                             }
                             ii += c.length() - wi.getWord().length();
