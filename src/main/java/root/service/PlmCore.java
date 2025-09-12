@@ -69,8 +69,8 @@ public class PlmCore {
                 w = llmWordRepo.findAllByWord(current);
                 if(w.isEmpty()) continue;
                 for (var wi: w) {
-                    for (var rw: llmWordCompoundRepo.findByRightword(wi.getN())) {
-                        var c = llmWordRepo.findById(rw.word).orElseThrow().getWord();
+                    for (var compound: llmWordCompoundRepo.findByRightword(wi.getN())) {
+                        var c = llmWordRepo.findById(compound.word).orElseThrow().getWord();
                         if(item.endsWith(c)) {
                             target = item.substring(0, item.length() - c.length());
                             if(learnCouple(target, c, input)) return;
