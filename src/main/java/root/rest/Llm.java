@@ -52,4 +52,8 @@ public class Llm {
     public void understandBox() {
         plmCore.understandBox();
     }
+    @PostMapping("/reunderstand/box")
+    public void reunderstandBox() {
+        plmCore.reunderstand();
+    }
 }

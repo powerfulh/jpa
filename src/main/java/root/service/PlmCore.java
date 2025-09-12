@@ -208,6 +208,13 @@ public class PlmCore {
             understand(item.src).get(0).box(box, understandBoxWordRepo);
         });
     }
+
+    @Transactional
+    public void reunderstand() {
+        understandBoxWordRepo.deleteAll();
+        understandBoxWordRepo.flush();
+        understandBoxRepo.findAll().forEach(box -> understand(box.src).get(0).box(box, understandBoxWordRepo));
+    }
 }
 
 class LearnWord extends LlmWord {
