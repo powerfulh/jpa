@@ -32,7 +32,7 @@ public class UnderstandTarget implements Cloneable {
                 wordSpace++;
                 continue;
             }
-            if(right.charAt(i) == ' ') {
+            if(currentSrc == ' ') {
                 ignored++;
                 i--;
             } else return null;
@@ -40,7 +40,7 @@ public class UnderstandTarget implements Cloneable {
         int nextSpace = 0;
         final int consumedLength = word.getWord().length() + ignored;
         while (right.length() > consumedLength + nextSpace && right.charAt(consumedLength + nextSpace) == ' ') nextSpace++;
-        return new Toke(word, currentCut, currentCut + consumedLength + nextSpace);
+        return new Toke(word, currentCut, currentCut + consumedLength + nextSpace, 0 < nextSpace);
     }
     public UnderstandTarget pushToke(List<Toke> understandList, Toke toke) {
         understandList.add(toke);

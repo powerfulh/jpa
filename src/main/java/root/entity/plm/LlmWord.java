@@ -12,7 +12,7 @@ public class LlmWord {
     Integer n;
     protected String word;
     protected String type;
-    String memo;
+    protected String memo;
 
     public static LlmWord to(LlmWord from) {
         var r = new LlmWord();

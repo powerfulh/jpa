@@ -53,6 +53,7 @@ create table plm_context(
 	foreign key (leftword) references llm_word(n),
 	foreign key (rightword) references llm_word(n)
 );
+ALTER table plm_context add column space int default 1;
 create table plm_understand_box(
 	n int primary key auto_increment,
 	src varchar(400) not null unique,

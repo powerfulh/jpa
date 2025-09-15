@@ -1,6 +1,5 @@
 package root.plm;
 
-import root.entity.plm.LlmWord;
 import root.entity.plm.PlmContext;
 import root.entity.plm.PlmUnderstandBox;
 import root.entity.plm.PlmUnderstandBoxWord;
@@ -12,18 +11,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Sentence extends ArrayList<LlmWord> {
+public class Sentence extends ArrayList<Toke> {
     final int contextPoint;
 
     public Sentence(List<Toke> list, PlmContextRepo plmContextRepo) {
-        super(list.stream().map(item -> item.src).toList());
+        super(list);
         var contextList = plmContextRepo.findAll();
         var openerContext = contextList.stream().filter(StaticUtil.getContextFinder(2903, get(0).getN())).findAny().orElse(null);
         int p = openerContext == null ? 0 : (openerContext.cnt * get(0).getWord().length());
         for (int i = 0; i < size() - 1; i++) {
             var context = getContext(i, i + 1, contextList);
             if(context == null) continue;
-            p += context.getCnt() * (get(i).getWord().length() + get(i + 1).getWord().length());
+            p += (get(i).rightSpace ? context.getSpace() : context.getCnt()) * (get(i).getWord().length() + get(i + 1).getWord().length());
         }
         contextPoint = p;
     }
