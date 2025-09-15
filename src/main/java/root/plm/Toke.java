@@ -7,8 +7,8 @@ public class Toke extends LlmWord {
     final int start;
     final int end;
 
-    public Toke(LlmWord word, int start, int end) {
-        src = word;
+    public Toke(LlmWord llmWord, int start, int end) {
+        src = llmWord;
         this.start = start;
         this.end = end;
         this.word = src.getWord();

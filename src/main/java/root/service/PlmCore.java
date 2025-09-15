@@ -9,6 +9,7 @@ import root.entity.plm.PlmUnderstandBox;
 import root.exception.PlmException;
 import root.plm.Sentence;
 import root.plm.StaticUtil;
+import root.plm.UnderstandTarget;
 import root.repo.plm.*;
 
 import java.util.*;
@@ -131,6 +132,7 @@ public class PlmCore {
     String nextSrc(String src, LlmWord word) {
         return src.substring(word.getWord().replaceAll("\\s", "").length());
     }
+    // todo src UnderstandTarget
     void separateToken(List<LlmWord> understandList, String src, final List<LlmWord> wordList, Map<String, List<LlmWord>> failHistory, List<PlmContext> contextList, List<Sentence> sentenceList) {
         var last = wordList.stream()
                 .filter(item -> item.getWord().replaceAll(" ", "").equals(src))
@@ -177,7 +179,8 @@ public class PlmCore {
         var symbols = llmWordRepo.findByType(symbolType).stream().map(LlmWord::getWord).collect(Collectors.joining()).toCharArray();
         final String src = replaceRepeatedChars.replaceRepeatedChars(pureSrc.replaceAll("\\s", ""), symbols);
         var wordList = llmWordRepo.findByTypeNot("opener");
-        var openerList = wordList.stream().filter(item -> src.startsWith(item.getWord())).toList();
+        final UnderstandTarget understandTarget = new UnderstandTarget(replaceRepeatedChars.replaceRepeatedChars(pureSrc, symbols));
+        var openerList = wordList.stream().map(understandTarget::getAvailableToke).filter(Objects::nonNull).toList();
         if (openerList.isEmpty()) throw new PlmException("Fail to set the opening word", src);
         PlmException e = null;
         Map<String, List<LlmWord>> failHistory = new HashMap<>();

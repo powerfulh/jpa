@@ -2,6 +2,8 @@ package root.plm;
 
 import root.entity.plm.LlmWord;
 
+import java.util.List;
+
 public class UnderstandTarget {
     final String src;
     int currentCut = 0;
@@ -37,5 +39,10 @@ public class UnderstandTarget {
         final int consumedLength = word.getWord().length() + ignored;
         while (right.length() > consumedLength + nextSpace && right.charAt(consumedLength + nextSpace) == ' ') nextSpace++;
         return new Toke(word, currentCut, currentCut + consumedLength + nextSpace);
+    }
+    public UnderstandTarget pushToke(List<LlmWord> understandList, Toke toke) {
+        understandList.add(toke.src);
+        currentCut = toke.end;
+        return this;
     }
 }
