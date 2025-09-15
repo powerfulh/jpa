@@ -13,4 +13,9 @@ public class Toke extends LlmWord {
         this.end = end;
         this.word = src.getWord();
     }
+
+    @Override
+    public Integer getN() {
+        return src.getN();
+    }
 }

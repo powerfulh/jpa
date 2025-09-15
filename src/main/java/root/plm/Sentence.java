@@ -15,8 +15,8 @@ import java.util.Map;
 public class Sentence extends ArrayList<LlmWord> {
     final int contextPoint;
 
-    public Sentence(List<LlmWord> list, PlmContextRepo plmContextRepo) {
-        super(list);
+    public Sentence(List<Toke> list, PlmContextRepo plmContextRepo) {
+        super(list.stream().map(item -> item.src).toList());
         var contextList = plmContextRepo.findAll();
         var openerContext = contextList.stream().filter(StaticUtil.getContextFinder(2903, get(0).getN())).findAny().orElse(null);
         int p = openerContext == null ? 0 : (openerContext.cnt * get(0).getWord().length());

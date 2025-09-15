@@ -4,7 +4,7 @@ import root.entity.plm.LlmWord;
 
 import java.util.List;
 
-public class UnderstandTarget {
+public class UnderstandTarget implements Cloneable {
     final String src;
     int currentCut = 0;
 
@@ -12,10 +12,7 @@ public class UnderstandTarget {
         this.src = src;
     }
 
-    String getLeft() {
-        return src.substring(0, currentCut);
-    }
-    String getRight() {
+    public String getRight() {
         return src.substring(currentCut);
     }
     public Toke getAvailableToke(LlmWord word) {
@@ -24,7 +21,12 @@ public class UnderstandTarget {
         int wordSpace = 0;
         for (int i = 0; i < word.getWord().length(); i++) {
             char currentWord = word.getWord().charAt(i);
-            char currentSrc = right.charAt(i - wordSpace + ignored);
+            char currentSrc;
+            try {
+                currentSrc = right.charAt(i - wordSpace + ignored);
+            } catch (StringIndexOutOfBoundsException e) {
+                return null;
+            }
             if(currentSrc == currentWord) continue;
             if(currentWord == ' ') {
                 wordSpace++;
@@ -40,9 +42,23 @@ public class UnderstandTarget {
         while (right.length() > consumedLength + nextSpace && right.charAt(consumedLength + nextSpace) == ' ') nextSpace++;
         return new Toke(word, currentCut, currentCut + consumedLength + nextSpace);
     }
-    public UnderstandTarget pushToke(List<LlmWord> understandList, Toke toke) {
-        understandList.add(toke.src);
+    public UnderstandTarget pushToke(List<Toke> understandList, Toke toke) {
+        understandList.add(toke);
         currentCut = toke.end;
         return this;
+    }
+    public boolean success() {
+        return src.length() == currentCut;
+    }
+    public void rollback(Toke toke) {
+        currentCut = toke.start;
+    }
+    @Override
+    public UnderstandTarget clone() {
+        try {
+            return (UnderstandTarget) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 }
