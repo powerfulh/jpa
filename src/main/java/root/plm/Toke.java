@@ -22,4 +22,8 @@ public class Toke extends LlmWord {
     public Integer getN() {
         return src.getN();
     }
+
+    public boolean isRightSpace() {
+        return rightSpace;
+    }
 }

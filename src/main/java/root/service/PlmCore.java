@@ -123,12 +123,12 @@ public class PlmCore {
         plmSrcBoxRepo.findAll().forEach(item -> learn(item.src));
     }
 
-    int contextPoint(List<PlmContext> contextList, int lw, int rw) {
-        return contextList.stream().filter(StaticUtil.getContextFinder(lw, rw)).mapToInt(PlmContext::getCnt).sum();
+    int contextPoint(List<PlmContext> contextList, Toke lt, int rw) {
+        return contextList.stream().filter(StaticUtil.getContextFinder(lt.getN(), rw)).mapToInt(item -> lt.isRightSpace() ? item.space : item.cnt).sum();
     }
     // 250911 PlmContext 는 전체 문맥을 같이 할수는 없어보이므로 연결 문맥만을 보기로 한다, 전체 문맥은 언젠가..
     Comparator<LlmWord> closerContext(List<Toke> understandList, List<PlmContext> contextList) {
-        return Comparator.comparing(item -> understandList.isEmpty() ? 0 : contextPoint(contextList, understandList.get(understandList.size() - 1).getN(), item.getN()));
+        return Comparator.comparing(item -> understandList.isEmpty() ? 0 : contextPoint(contextList, understandList.get(understandList.size() - 1), item.getN()));
     }
     void separateToken(List<Toke> understandList, UnderstandTarget src, final List<LlmWord> wordList, Map<String, List<LlmWord>> failHistory, List<PlmContext> contextList, List<Sentence> sentenceList) {
         if(src.success()) sentenceList.add(new Sentence(understandList, plmContextRepo));
@@ -156,7 +156,7 @@ public class PlmCore {
             }
             if(sameList.size() > 1 && !understandList.isEmpty()) {
                 sameList.subList(0, sameList.size() - 1).stream()
-                        .filter(item -> contextPoint(contextList, understandList.get(understandList.size() - 1).getN(), item.getN()) > 0)
+                        .filter(item -> contextPoint(contextList, understandList.get(understandList.size() - 1), item.getN()) > 0)
                         .forEach(item -> {
                             var clone = new ArrayList<>(understandList);
                             separateToken(clone, src.clone().pushToke(clone, item), wordList, failHistory, contextList, sentenceList);

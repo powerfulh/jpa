@@ -18,7 +18,7 @@ public class PlmContext {
     public int rightword;
     @UpdateTimestamp
     LocalDateTime updatedDate;
-    int space;
+    public int space;
 
     public int getCnt() {
         return cnt;

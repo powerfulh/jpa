@@ -47,13 +47,13 @@ create table plm_context(
 	n int primary key auto_increment,
 	leftword int not null,
 	rightword int not null,
-	cnt int default 1,
+	cnt int default 0,
 	updated_date datetime default now(),
 	unique (leftword, rightword),
 	foreign key (leftword) references llm_word(n),
 	foreign key (rightword) references llm_word(n)
 );
-ALTER table plm_context add column space int default 1;
+ALTER table plm_context add column space int default 0;
 create table plm_understand_box(
 	n int primary key auto_increment,
 	src varchar(400) not null unique,

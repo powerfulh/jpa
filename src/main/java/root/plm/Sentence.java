@@ -35,12 +35,15 @@ public class Sentence extends ArrayList<Toke> {
         for (int i = 0; i < size() - 1; i++) {
             var context = getContext(i, i + 1, contextList);
             if(context == null) {
-                context = new PlmContext(); // 실시간 조정과는 다르게 0에서 출발
+                context = new PlmContext();
                 context.leftword = get(i).getN();
                 context.rightword = get(i + 1).getN();
+                if(get(i).rightSpace) context.space++;
+                else context.cnt++;
                 plmContextRepo.save(context);
                 contextList.add(context);
-            } else context.cnt++;
+            } else if(get(i).rightSpace) context.space++;
+            else context.cnt++;
         }
     }
     public int getContextPoint() {
