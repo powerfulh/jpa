@@ -7,10 +7,7 @@ import root.entity.plm.PlmContext;
 import root.entity.plm.PlmLearn;
 import root.entity.plm.PlmUnderstandBox;
 import root.exception.PlmException;
-import root.plm.Sentence;
-import root.plm.StaticUtil;
-import root.plm.Toke;
-import root.plm.UnderstandTarget;
+import root.plm.*;
 import root.repo.plm.*;
 
 import java.util.*;
@@ -26,11 +23,12 @@ public class PlmCore {
     final PlmContextRepo plmContextRepo;
     final UnderstandBoxRepo understandBoxRepo;
     final UnderstandBoxWordRepo understandBoxWordRepo;
+    final SmartStartBooster smartStartBooster;
 
     final String symbolType = "기호";
     final String learnedCompoundType = "학습 결합";
 
-    public PlmCore(LlmWordRepo llmWordRepo, PlmLearnRepo plmLearnRepo, LlmWordCompoundRepo llmWordCompoundRepo, PlmSrcBoxRepo plmSrcBoxRepo, ReplaceRepeatedChars replaceRepeatedChars, PlmContextRepo plmContextRepo, UnderstandBoxRepo understandBoxRepo, UnderstandBoxWordRepo understandBoxWordRepo) {
+    public PlmCore(LlmWordRepo llmWordRepo, PlmLearnRepo plmLearnRepo, LlmWordCompoundRepo llmWordCompoundRepo, PlmSrcBoxRepo plmSrcBoxRepo, ReplaceRepeatedChars replaceRepeatedChars, PlmContextRepo plmContextRepo, UnderstandBoxRepo understandBoxRepo, UnderstandBoxWordRepo understandBoxWordRepo, SmartStartBooster smartStartBooster) {
         this.llmWordRepo = llmWordRepo;
         this.plmLearnRepo = plmLearnRepo;
         this.llmWordCompoundRepo = llmWordCompoundRepo;
@@ -39,6 +37,7 @@ public class PlmCore {
         this.plmContextRepo = plmContextRepo;
         this.understandBoxRepo = understandBoxRepo;
         this.understandBoxWordRepo = understandBoxWordRepo;
+        this.smartStartBooster = smartStartBooster;
     }
 
     void learn(String w, String src, String rightword, String type) {
@@ -123,19 +122,16 @@ public class PlmCore {
         plmSrcBoxRepo.findAll().forEach(item -> learn(item.src));
     }
 
-    int contextPoint(List<PlmContext> contextList, Toke lt, int rw) {
-        return contextList.stream().filter(StaticUtil.getContextFinder(lt.getN(), rw)).mapToInt(item -> lt.isRightSpace() ? item.space : item.cnt).sum();
-    }
-    // 250911 PlmContext 는 전체 문맥을 같이 할수는 없어보이므로 연결 문맥만을 보기로 한다, 전체 문맥은 언젠가..
-    Comparator<LlmWord> closerContext(List<Toke> understandList, List<PlmContext> contextList) {
-        return Comparator.comparing(item -> understandList.isEmpty() ? 0 : contextPoint(contextList, understandList.get(understandList.size() - 1), item.getN()));
-    }
     void separateToken(List<Toke> understandList, UnderstandTarget src, final List<LlmWord> wordList, Map<String, List<LlmWord>> failHistory, List<PlmContext> contextList, List<Sentence> sentenceList) {
         if(src.success()) sentenceList.add(new Sentence(understandList, plmContextRepo));
         else {
             var h = failHistory.get(src.getRight());
             var sameList = wordList.stream()
-                    .map(src::getAvailableToke)
+                    .map(item -> {
+                        Toke toke = src.getAvailableToke(item);
+                        if(toke == null || understandList.isEmpty()) return toke;
+                        return smartStartBooster.rightContext(toke, understandList.get(understandList.size() - 1), contextList);
+                    })
                     .filter(item -> {
                         if(item != null) {
                             if(h == null) return true;
@@ -143,7 +139,7 @@ public class PlmCore {
                         }
                         return false;
                     })
-                    .sorted(closerContext(understandList, contextList))
+                    .sorted(Comparator.comparing(Toke::getRightContext))
                     .toList();
             if(sameList.isEmpty()) {
                 if(understandList.isEmpty()) throw new PlmException("Fail to understand", failHistory);
@@ -156,7 +152,7 @@ public class PlmCore {
             }
             if(sameList.size() > 1 && !understandList.isEmpty()) {
                 sameList.subList(0, sameList.size() - 1).stream()
-                        .filter(item -> contextPoint(contextList, understandList.get(understandList.size() - 1), item.getN()) > 0)
+                        .filter(item -> item.getRightContext() > 0)
                         .forEach(item -> {
                             var clone = new ArrayList<>(understandList);
                             separateToken(clone, src.clone().pushToke(clone, item), wordList, failHistory, contextList, sentenceList);

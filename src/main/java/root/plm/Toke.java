@@ -7,6 +7,7 @@ public class Toke extends LlmWord {
     final int start;
     final int end;
     final boolean rightSpace;
+    int rightContext; // 내가 오른쪽일때 문맥 점수
 
     public Toke(LlmWord llmWord, int start, int end, boolean rightSpace) {
         src = llmWord;
@@ -25,5 +26,9 @@ public class Toke extends LlmWord {
 
     public boolean isRightSpace() {
         return rightSpace;
+    }
+
+    public int getRightContext() {
+        return rightContext;
     }
 }
