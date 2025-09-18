@@ -19,12 +19,7 @@ public class Sentence extends ArrayList<Toke> {
         var contextList = plmContextRepo.findAll();
         var openerContext = contextList.stream().filter(StaticUtil.getContextFinder(2903, get(0).getN())).findAny().orElse(null);
         int p = openerContext == null ? 0 : (openerContext.cnt * get(0).getWord().length());
-        for (int i = 0; i < size() - 1; i++) {
-            var context = getContext(i, i + 1, contextList);
-            if(context == null) continue;
-            p += (get(i).rightSpace ? context.getSpace() : context.getCnt()) * (get(i).getWord().length() + get(i + 1).getWord().length());
-        }
-        contextPoint = p;
+        contextPoint = p + list.stream().mapToInt(Toke::getRightContext).sum();
     }
 
     PlmContext getContext(int li, int ri, List<PlmContext> list) {
