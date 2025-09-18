@@ -17,7 +17,7 @@ public class Sentence extends ArrayList<Toke> {
     public Sentence(List<Toke> list, PlmContextRepo plmContextRepo) {
         super(list);
         var contextList = plmContextRepo.findAll();
-        var openerContext = contextList.stream().filter(StaticUtil.getContextFinder(2903, get(0).getN())).findAny().orElse(null);
+        var openerContext = contextList.stream().filter(StaticUtil.getContextFinder(StaticUtil.opener, get(0).getN())).findAny().orElse(null);
         int p = openerContext == null ? 0 : (openerContext.cnt * get(0).getWord().length());
         contextPoint = p + list.stream().mapToInt(Toke::getRightContext).sum();
     }

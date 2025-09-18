@@ -15,8 +15,9 @@ public class SmartStartBooster {
         target.rightContext = contextList.stream().filter(StaticUtil.getContextFinder(left.getN(), target.getN())).mapToInt(item -> left.isRightSpace() ? item.space : item.cnt).sum();
         target.rightContext *= left.getWord().length() + target.getWord().length();
         if(left.getType().equals("무엇") && target.getType().equals("조사")) target.rightContext++;
-        if(left.isRightSpace() && target.getType().equals("어미")) target.rightContext--;
         if(left.getType().equals("0") && target.getType().equals("조사") && !target.getN().equals(191)) target.rightContext--;
+        if(left.isRightSpace() && target.getType().equals("어미")) target.rightContext--;
+        if(!left.isRightSpace() && !left.getN().equals(StaticUtil.opener) && target.getType().equals("감탄사")) target.rightContext--;
         return target;
     }
 }
