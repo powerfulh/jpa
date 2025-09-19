@@ -102,14 +102,14 @@ public class PlmCore {
             String item = cleanInput[i];
             int next = i + 1;
             // '고' 로 끝났다는 것은 '고' 로 시작하는 공백을 포함한 토큰일 가능성이 있다 250905
-            if(item.charAt(item.length() - 1) == '고') {
+            if(item.charAt(item.length() - 1) == '고' && next < cleanInput.length) {
                 String compoundNext = item.concat(" ").concat(cleanInput[next]);
                 boolean spacyToken = llmWordRepo.findByWordStartingWith("고 ").stream()
                         .anyMatch(gi -> compoundNext.contains(gi.getWord()));
                 if(spacyToken) {
                     learn(compoundNext, input);
                     ++i;
-                    return;
+                    continue;
                 }
             }
             learn(item, input);
