@@ -2,10 +2,7 @@ package root.service;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-import root.entity.plm.LlmWord;
-import root.entity.plm.PlmContext;
-import root.entity.plm.PlmLearn;
-import root.entity.plm.PlmUnderstandBox;
+import root.entity.plm.*;
 import root.exception.PlmException;
 import root.plm.*;
 import root.repo.plm.*;
@@ -122,7 +119,7 @@ public class PlmCore {
         plmSrcBoxRepo.findAll().forEach(item -> learn(item.src));
     }
 
-    void separateToken(List<Toke> understandList, UnderstandTarget src, final List<LlmWord> wordList, Map<String, List<LlmWord>> failHistory, List<PlmContext> contextList, List<Sentence> sentenceList) {
+    void separateToken(List<Toke> understandList, UnderstandTarget src, final List<LlmWord> wordList, Map<String, List<LlmWord>> failHistory, List<PlmContext> contextList, List<Sentence> sentenceList, List<LlmWordCompound> compoundList) {
         if(src.success()) sentenceList.add(new Sentence(understandList, plmContextRepo));
         else {
             var h = failHistory.get(src.getRight());
@@ -130,7 +127,7 @@ public class PlmCore {
                     .map(item -> {
                         Toke toke = src.getAvailableToke(item);
                         if(toke == null || understandList.isEmpty()) return toke;
-                        return smartStartBooster.rightContext(toke, understandList.get(understandList.size() - 1), contextList);
+                        return smartStartBooster.rightContext(toke, understandList.get(understandList.size() - 1), contextList, compoundList);
                     })
                     .filter(item -> {
                         if(item != null) {
@@ -147,7 +144,7 @@ public class PlmCore {
                 failHistory.computeIfAbsent(src.getRight(), k -> new ArrayList<>());
                 failHistory.get(src.getRight()).add(understandList.get(understandList.size() - 1));
                 understandList.remove(understandList.size() - 1);
-                separateToken(understandList, src, wordList, failHistory, contextList, sentenceList);
+                separateToken(understandList, src, wordList, failHistory, contextList, sentenceList, compoundList);
                 return;
             }
             if(sameList.size() > 1 && !understandList.isEmpty()) {
@@ -155,10 +152,10 @@ public class PlmCore {
                         .filter(item -> item.getRightContext() > 0)
                         .forEach(item -> {
                             var clone = new ArrayList<>(understandList);
-                            separateToken(clone, src.clone().pushToke(clone, item), wordList, failHistory, contextList, sentenceList);
+                            separateToken(clone, src.clone().pushToke(clone, item), wordList, failHistory, contextList, sentenceList, compoundList);
                         });
             }
-            separateToken(understandList, src.pushToke(understandList, sameList.get(sameList.size() - 1)), wordList, failHistory, contextList, sentenceList);
+            separateToken(understandList, src.pushToke(understandList, sameList.get(sameList.size() - 1)), wordList, failHistory, contextList, sentenceList, compoundList);
         }
     }
     public List<Sentence> understand(String pureSrc) {
@@ -172,10 +169,11 @@ public class PlmCore {
         Map<String, List<LlmWord>> failHistory = new HashMap<>();
         List<Sentence> sentenceList = new ArrayList<>();
         var contextList = plmContextRepo.findAll();
+        var compoundList = llmWordCompoundRepo.findAll();
         for (var opener: openerList) {
             List<Toke> understandList = new ArrayList<>();
             try {
-                separateToken(understandList, understandTarget.pushToke(understandList, opener), wordList, failHistory, contextList, sentenceList);
+                separateToken(understandList, understandTarget.pushToke(understandList, opener), wordList, failHistory, contextList, sentenceList, compoundList);
             } catch (PlmException plmException) {
                 e = plmException;
             }
