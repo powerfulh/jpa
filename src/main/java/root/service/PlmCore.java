@@ -127,7 +127,7 @@ public class PlmCore {
                     .map(item -> {
                         Toke toke = src.getAvailableToke(item);
                         if(toke == null || understandList.isEmpty()) return toke;
-                        return smartStartBooster.rightContext(toke, understandList.get(understandList.size() - 1), contextList, compoundList);
+                        return smartStartBooster.rightContext(toke, understandList.get(understandList.size() - 1), toke, contextList, compoundList, wordList);
                     })
                     .filter(item -> {
                         if(item != null) {

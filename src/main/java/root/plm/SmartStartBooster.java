@@ -1,6 +1,7 @@
 package root.plm;
 
 import org.springframework.stereotype.Component;
+import root.entity.plm.LlmWord;
 import root.entity.plm.LlmWordCompound;
 import root.entity.plm.PlmContext;
 
@@ -15,14 +16,19 @@ public class SmartStartBooster {
     int contextPoint(List<PlmContext> contextList, Toke left, int right) {
         return contextList.stream().filter(StaticUtil.getContextFinder(left.getN(), right)).mapToInt(item -> left.isRightSpace() ? item.space : item.cnt).sum();
     }
-    public Toke rightContext(Toke target, Toke left, List<PlmContext> contextList, List<LlmWordCompound> compoundList) {
-        target.rightContext = contextPoint(contextList, left, target.getN());
-//        if(target.getType().equals("결합"))
+    public Toke rightContext(Toke target, Toke left, LlmWord right, List<PlmContext> contextList, List<LlmWordCompound> compoundList, List<LlmWord> wordList) {
+        target.rightContext += contextPoint(contextList, left, right.getN());
+        if(left.getType().equals("0") && right.getType().equals("조사") && !right.getN().equals(191)) target.rightContext--;
+        if(left.isRightSpace() && right.getType().equals("어미")) target.rightContext--;
+        if(!left.isRightSpace() && (left.getType().equals("무엇") || left.getType().equals("대명사")) && right.getType().equals("조사")) target.rightContext++;
+        if(!left.isRightSpace() && !left.getN().equals(StaticUtil.opener) && right.getType().equals("감탄사")) target.rightContext--;
         target.rightContext *= left.getWord().length() + target.getWord().length();
-        if(left.getType().equals("0") && target.getType().equals("조사") && !target.getN().equals(191)) target.rightContext--;
-        if(left.isRightSpace() && target.getType().equals("어미")) target.rightContext--;
-        if(!left.isRightSpace() && (left.getType().equals("무엇") || left.getType().equals("대명사")) && target.getType().equals("조사")) target.rightContext++;
-        if(!left.isRightSpace() && !left.getN().equals(StaticUtil.opener) && target.getType().equals("감탄사")) target.rightContext--;
+        compoundList.stream()
+                .filter(item -> right.getN().equals(item.word))
+                .findAny()
+                .ifPresent(compound -> rightContext(target, left, wordList.stream()
+                        .filter(item -> item.getN().equals(compound.getLeftword()))
+                        .findAny().orElseThrow(), contextList, compoundList, wordList));
         return target;
     }
 }

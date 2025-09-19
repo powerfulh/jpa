@@ -14,7 +14,7 @@ public class Toke extends LlmWord {
         this.start = start;
         this.end = end;
         this.rightSpace = rightSpace;
-        this.word = src.getWord();
+        word = src.getWord();
         type = src.getType();
         memo = src.getMemo();
     }
