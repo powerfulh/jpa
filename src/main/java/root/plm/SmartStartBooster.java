@@ -20,8 +20,12 @@ public class SmartStartBooster {
         target.rightContext += contextPoint(contextList, left, right.getN());
         if(left.getType().equals("0") && right.getType().equals("조사") && !right.getN().equals(191)) target.rightContext--;
         if(left.isRightSpace() && right.getType().equals("어미")) target.rightContext--;
-        if(!left.isRightSpace() && (left.getType().equals("무엇") || left.getType().equals("대명사")) && right.getType().equals("조사")) target.rightContext++;
-        if(!left.isRightSpace() && !left.getN().equals(StaticUtil.opener) && right.getType().equals("감탄사")) target.rightContext--;
+        if(!left.isRightSpace()) {
+            final boolean leftWrapA = left.getType().equals("무엇") || left.getType().equals("대명사");
+            if(leftWrapA && right.getType().equals("조사")) target.rightContext++;
+            if(leftWrapA && right.getType().equals("1")) target.rightContext--;
+            if(!left.getN().equals(StaticUtil.opener) && right.getType().equals("감탄사")) target.rightContext--;
+        }
         target.rightContext *= left.getWord().length() + target.getWord().length();
         compoundList.stream()
                 .filter(item -> right.getN().equals(item.word))
