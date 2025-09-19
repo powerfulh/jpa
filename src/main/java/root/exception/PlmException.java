@@ -2,6 +2,7 @@ package root.exception;
 
 import root.entity.plm.LlmWord;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,8 +15,14 @@ public class PlmException extends RuntimeException {
       info.put(title, data);
     }
 
-  public PlmException(String failToUnderstand, Map<String, List<LlmWord>> failHistory) {
-    info = new HashMap<>();
-    info.put(failToUnderstand, failHistory);
-  }
+    public PlmException(String failToUnderstand, Map<String, List<LlmWord>> failHistory) {
+      info = new HashMap<>();
+      info.put(failToUnderstand, failHistory.keySet().stream().map(item -> {
+        Map<String, Object> m = new HashMap<>();
+        m.put("key", item);
+        m.put("length", item.length());
+        m.put("v", failHistory.get(item));
+        return m;
+      }).sorted(Comparator.comparing(item -> (Integer) item.get("length"))).toList());
+    }
 }
