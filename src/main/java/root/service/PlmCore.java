@@ -140,7 +140,7 @@ public class PlmCore {
                     .sorted(Comparator.comparing(Toke::getRightContext))
                     .toList();
             if(sameList.isEmpty()) {
-                if(understandList.isEmpty()) throw new PlmException("Fail to understand", failHistory);
+                if(understandList.size() < 2) throw new PlmException("Fail to understand", failHistory);
                 src.rollback(understandList.get(understandList.size() - 1));
                 failHistory.computeIfAbsent(src.getRight(), k -> new ArrayList<>());
                 failHistory.get(src.getRight()).add(understandList.get(understandList.size() - 1));
