@@ -14,13 +14,10 @@ public class MindMap {
     LlmWord left;
 
     MindMap(int n, List<PlmContext> list, List<LlmWord> wordList, List<LlmWordCompound> compoundList, LlmWord left, List<Integer> history) {
-        word = selectWord(n, wordList);
+        word = StaticUtil.selectWord(n, wordList);
         this.left = left == null ? word : left;
         history.add(n);
         if(history.size() < 10) nextMap(list, wordList, compoundList, history);
-    }
-    LlmWord selectWord(int n, List<LlmWord> data) {
-        return data.stream().filter(item -> item.getN() == n).findAny().orElseThrow();
     }
     void nextMap(List<PlmContext> list, List<LlmWord> wordList, List<LlmWordCompound> compoundList, List<Integer> history) {
         next = list.stream().filter(item -> item.getLeftword() == left.getN())
@@ -36,7 +33,7 @@ public class MindMap {
                     var comp = compoundList.stream()
                             .filter(ci -> ci.getLeftword() == item.getLeftword() && ci.getRightword() == item.getRightword())
                             .findAny().orElse(null);
-                    return new MindMap(item.getRightword(), list, wordList, compoundList, comp == null ? null : selectWord(comp.word, wordList), history);
+                    return new MindMap(item.getRightword(), list, wordList, compoundList, comp == null ? null : StaticUtil.selectWord(comp.word, wordList), history);
                 }).toList();
     }
     static MindMap make(int n, List<PlmContext> list, List<LlmWord> wordList, List<LlmWordCompound> compoundList) {
