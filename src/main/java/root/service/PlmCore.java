@@ -59,8 +59,9 @@ public class PlmCore {
             String target = item;
             String cutter = null;
             String type = null;
+            boolean compoundMode = false;
             nextCut: for (int ii = 0; ii < item.length() - 1; ii++) {
-                type = "학습";
+                if(!compoundMode) type = "학습";
                 int cut = item.length() - 1 - ii;
                 String current = item.substring(cut);
                 w = llmWordRepo.findAllByWord(current);
@@ -85,11 +86,17 @@ public class PlmCore {
                     learn(item.substring(0, cut), input);
                     return;
                 }
-                target = item.substring(0, cut);
-                cutter = current;
+                if(!compoundMode) {
+                    target = item.substring(0, cut);
+                    cutter = current;
+                }
                 if(learnCouple(target)) {
                     target = target.concat(current);
                     type = learnedCompoundType;
+                    compoundMode = true;
+                    // 학결 캐이스가 존재하면 그때부턴 학결만 본다
+                    // 원래 학결이 뜨면 아예 루프 끄고 외워버리다가 더 돌아봐야 하는 단어(기억 안 남)가 발견돼서 돌게 했는데, 이번엔 먼저 뜬 학결이 올바른 '모으다' 가 발견돼서
+                    // 학결이 뜨면 더 돌아보는 이유를 학결에 한해본다
                 }
             }
             learn(target, input, cutter, type);
