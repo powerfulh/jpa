@@ -2,12 +2,17 @@ package root.plm;
 
 import root.entity.plm.LlmWord;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class Toke extends LlmWord {
     final LlmWord src;
     final int start;
     final int end;
     final boolean rightSpace;
     int rightContext; // 내가 오른쪽일때 문맥 점수
+    final Map<Integer, List<Integer>> contextHistory = new HashMap<>();
 
     public Toke(LlmWord llmWord, int start, int end, boolean rightSpace) {
         src = llmWord;

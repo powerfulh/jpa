@@ -5,6 +5,7 @@ import root.entity.plm.LlmWord;
 import root.entity.plm.LlmWordCompound;
 import root.entity.plm.PlmContext;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -13,11 +14,15 @@ import java.util.List;
 @Component
 public class SmartStartBooster {
 
-    int contextPoint(List<PlmContext> contextList, int left, int right, boolean space) {
+    int contextPoint(List<PlmContext> contextList, int left, int right, boolean space, List<Integer> history) {
+        history.add(right);
         return contextList.stream().filter(StaticUtil.getContextFinder(left, right)).mapToInt(item -> space ? item.space : item.cnt).sum();
     }
     public Toke rightContext(Toke target, LlmWord left, LlmWord right, List<PlmContext> contextList, List<LlmWordCompound> compoundList, List<LlmWord> wordList, boolean space) {
-        target.rightContext += contextPoint(contextList, left.getN(), right.getN(), space);
+        target.contextHistory.computeIfAbsent(left.getN(), k -> new ArrayList<>());
+        var h = target.contextHistory.get(left.getN());
+        if(!h.isEmpty() && h.stream().anyMatch(item -> item.equals(right.getN()))) return null;
+        target.rightContext += contextPoint(contextList, left.getN(), right.getN(), space, h);
         if(left.getType().equals("0") && right.getType().equals("조사") && !right.getN().equals(191)) target.rightContext--;
         if(space && right.getType().equals("어미")) target.rightContext--;
         if(!space) {
