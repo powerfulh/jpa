@@ -136,7 +136,11 @@ public class PlmCore {
                         Toke toke = src.getAvailableToke(item);
                         if(toke == null || understandList.isEmpty()) return toke;
                         Toke last = understandList.get(understandList.size() - 1);
-                        return smartStartBooster.rightContext(toke, last, toke, contextList, compoundList, wordList, last.isRightSpace());
+                        try {
+                            return smartStartBooster.rightContext(toke, last, toke, contextList, compoundList, wordList, last.isRightSpace(), last.otherOption);
+                        } catch (PlmException e) {
+                            return null;
+                        }
                     })
                     .filter(item -> {
                         if(item != null) {
@@ -156,6 +160,7 @@ public class PlmCore {
                 separateToken(understandList, src, wordList, failHistory, contextList, sentenceList, compoundList);
                 return;
             }
+            final Toke best = sameList.get(sameList.size() - 1);
             if(sameList.size() > 1 && !understandList.isEmpty()) {
                 sameList.subList(0, sameList.size() - 1).stream()
                         .filter(item -> item.getRightContext() > 0)
@@ -163,8 +168,9 @@ public class PlmCore {
                             var clone = new ArrayList<>(understandList);
                             separateToken(clone, src.clone().pushToke(clone, item), wordList, failHistory, contextList, sentenceList, compoundList);
                         });
+                if(best.getRightContext() < 1) best.otherOption = true;
             }
-            separateToken(understandList, src.pushToke(understandList, sameList.get(sameList.size() - 1)), wordList, failHistory, contextList, sentenceList, compoundList);
+            separateToken(understandList, src.pushToke(understandList, best), wordList, failHistory, contextList, sentenceList, compoundList);
         }
     }
     public List<Sentence> understand(String pureSrc) {
