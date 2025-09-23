@@ -11,6 +11,7 @@ public class PlmUnderstandBox {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Integer n;
     public String src;
+    public boolean activate;
 
     public Integer getN() {
         return n;

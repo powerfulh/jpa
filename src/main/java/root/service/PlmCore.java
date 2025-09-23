@@ -206,11 +206,17 @@ public class PlmCore {
     @Transactional
     public void understandBox() {
         understandBoxWordRepo.deleteAll();
-        understandBoxRepo.deleteAll();
+        understandBoxRepo.deleteByActivate(false);
         understandBoxRepo.flush();
-        plmSrcBoxRepo.findAll().forEach(item -> {
+        var boxList = understandBoxRepo.findAll();
+        boxList.forEach(box -> understand(box.src).get(0).box(box, understandBoxWordRepo));
+        List<String> list = boxList.stream().map(item -> item.src).toList();
+        plmSrcBoxRepo.findAll().stream()
+                .filter(item -> !list.contains(item.src))
+                .forEach(item -> {
             var box = new PlmUnderstandBox();
             box.src = item.src;
+            box.activate = true;
             understandBoxRepo.save(box);
             understand(item.src).get(0).box(box, understandBoxWordRepo);
         });
