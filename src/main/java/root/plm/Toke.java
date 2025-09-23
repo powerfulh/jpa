@@ -1,5 +1,6 @@
 package root.plm;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import root.entity.plm.LlmWord;
 
 import java.util.HashMap;
@@ -13,6 +14,7 @@ public class Toke extends LlmWord {
     final boolean rightSpace;
     int rightContext; // 내가 오른쪽일때 문맥 점수
     final Map<Integer, List<Integer>> contextHistory = new HashMap<>();
+    @JsonIgnore
     public boolean otherOption;
 
     public Toke(LlmWord llmWord, int start, int end, boolean rightSpace) {
