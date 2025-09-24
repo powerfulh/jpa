@@ -204,11 +204,14 @@ public class PlmCore {
         understand(pureSrc).get(0).learnContext(plmContextRepo);
     }
 
-    @Transactional
-    public void understandBox() {
+    void beforeUnderstandBox() {
         understandBoxWordRepo.deleteAll();
         understandBoxRepo.deleteByActivate(false);
         understandBoxRepo.flush();
+    }
+    @Transactional
+    public void understandBox() {
+        beforeUnderstandBox();
         var boxList = understandBoxRepo.findAll();
         boxList.forEach(box -> understand(box.src).get(0).box(box, understandBoxWordRepo));
         List<String> list = boxList.stream().map(item -> item.src).toList();
@@ -225,8 +228,7 @@ public class PlmCore {
 
     @Transactional
     public void reunderstand() {
-        understandBoxWordRepo.deleteAll();
-        understandBoxWordRepo.flush();
+        beforeUnderstandBox();
         understandBoxRepo.findAll().forEach(box -> understand(box.src).get(0).box(box, understandBoxWordRepo));
     }
 }
