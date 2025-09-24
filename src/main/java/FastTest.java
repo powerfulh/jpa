@@ -8,6 +8,7 @@ public class FastTest {
     final int complete = 4; // ㄴ
     final int going = 8; // ㄹ
     final int respect = 17; // ㅂ
+    final int past = 20; // ㅂ
 
     char addFooter(char target, int footerIndex) {
         return (char) (target + footerIndex);
@@ -36,21 +37,29 @@ public class FastTest {
         int choIndex = SIndex / (21 * 28); // 초성 인덱스
         return (char) (SBase + (choIndex * 21 + motherIndex) * 28);
     }
-    List<String> help(char target) {
-        List<String> list = new ArrayList<>();
+    List<HelpResult> help(char target) {
+        List<HelpResult> list = new ArrayList<>();
         switch (helpable(target)) {
             case 1:
-                list.add(addFooter(target, complete) + "다");
-                list.add(String.valueOf(addFooter(target, going)));
-                list.add(addFooter(target, complete) + "다고");
-                list.add(addFooter(target, going) + "게");
-                list.add(String.valueOf(addFooter(target, complete)));
-                list.add(addFooter(target, going) + "지");
-                list.add(addFooter(target, going) + "까");
-                list.add(addFooter(target, complete) + "다는");
-                list.add(addFooter(target, respect) + "니다");
+                list.add(new HelpResult(215, addFooter(target, complete) + "다"));
+                list.add(new HelpResult(48, String.valueOf(addFooter(target, going))));
+                list.add(new HelpResult(3039, addFooter(target, complete) + "다고"));
+                list.add(new HelpResult(3053, addFooter(target, going) + "게"));
+                list.add(new HelpResult(309, String.valueOf(addFooter(target, complete))));
+                list.add(new HelpResult(2912, addFooter(target, going) + "지"));
+                list.add(new HelpResult(3069, addFooter(target, going) + "까"));
+                list.add(new HelpResult(3437, addFooter(target, complete) + "다는"));
+                list.add(new HelpResult(318, addFooter(target, respect) + "니다"));
+                break;
             case 2:
-//                list.add();
+                list.add(new HelpResult(184, String.valueOf(changeMother(target, 6))));
+                list.add(new HelpResult(162, String.valueOf(addFooter(changeMother(target, 6), past))));
+                list.add(new HelpResult(50, changeMother(target, 6) + "서"));
+                list.add(new HelpResult(48, String.valueOf(addFooter(target, going))));
+                list.add(new HelpResult(3053, addFooter(target, going) + "게"));
+                list.add(new HelpResult(309, String.valueOf(addFooter(target, complete))));
+                list.add(new HelpResult(215, addFooter(target, complete) + "다"));
+                break;
         }
         return list;
     }
@@ -59,10 +68,10 @@ public class FastTest {
         char c0 = '가';
         char c1 = '서';
         char c2 = '키';
-        int r = comp.helpable(c0);
-        System.out.println(comp.changeMother(c2, 6)); // ㅕ
-        System.out.println(comp.changeMother(c2, 7));
-//        System.out.println(comp.addFooter('가', comp.going));
-//        System.out.println(comp.addFooter('가', comp.respect));
+        System.out.println(comp.help(c0).stream().map(HelpResult::word).toList());
+        System.out.println(comp.help(c1).stream().map(HelpResult::word).toList());
+        System.out.println(comp.help(c2).stream().map(HelpResult::word).toList());
     }
 }
+
+record HelpResult(int n, String word) {}
