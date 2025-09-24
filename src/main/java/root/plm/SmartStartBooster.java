@@ -42,12 +42,12 @@ public class SmartStartBooster {
                 .filter(item -> right.getN().equals(item.word))
                 .findAny()
                 .ifPresent(compound ->
-                        rightContext(target, left, StaticUtil.selectWord(compound.getLeftword(), wordList), contextList, compoundList, wordList, space, otherOption));
+                        rightContext(target, left, StaticUtil.selectWord(compound.getLeftword(), wordList), contextList, compoundList, wordList, space, false));
         compoundList.stream()
                 .filter(item -> left.getN().equals(item.word))
                 .findAny()
                 .ifPresent(compound ->
-                        rightContext(target, StaticUtil.selectWord(compound.getRightword(), wordList), right, contextList, compoundList, wordList, space, otherOption));
+                        rightContext(target, StaticUtil.selectWord(compound.getRightword(), wordList), right, contextList, compoundList, wordList, space, false));
         return target;
     }
 }
