@@ -66,7 +66,7 @@ public class FastTest {
                 list.add(new HelpResult(215, addFooter(target, complete) + "다"));
                 break;
             case 3:
-                list.add(new HelpResult(83, removeFooter(target) + "운데"));
+                list.add(new HelpResult(4602, removeFooter(target) + "운데"));
                 list.add(new HelpResult(105, removeFooter(target) + "움"));
                 list.add(new HelpResult(184, removeFooter(target) + "워"));
                 list.add(new HelpResult(309, removeFooter(target) + "운"));
