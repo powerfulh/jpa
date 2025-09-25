@@ -127,9 +127,10 @@ public class PlmCore {
         plmSrcBoxRepo.findAll().forEach(item -> learn(item.src));
     }
 
-    void separateToken(List<Toke> understandList, UnderstandTarget src, final List<LlmWord> wordList, Map<String, List<LlmWord>> failHistory, List<PlmContext> contextList, List<Sentence> sentenceList, List<LlmWordCompound> compoundList) {
+    void separateToken(List<Toke> understandList, UnderstandTarget src, final List<LlmWord> wordList, Map<String, List<LlmWord>> failHistory, List<PlmContext> contextList, List<Sentence> sentenceList, List<LlmWordCompound> compoundList, SuccessHistory successHistory) {
         if(src.success()) sentenceList.add(new Sentence(understandList, plmContextRepo));
         else {
+//            if(successHistory.get())
             var h = failHistory.get(src.getRight());
             var sameList = wordList.stream()
                     .map(item -> {
@@ -151,27 +152,34 @@ public class PlmCore {
                     })
                     .sorted(Comparator.comparing(Toke::getRightContext))
                     .toList();
+            var lastUnderstand = understandList.get(understandList.size() - 1);
             if(sameList.isEmpty()) {
-                var lastUnderstand = understandList.get(understandList.size() - 1);
                 if(understandList.size() < 2) throw failHistory.isEmpty() ? new PlmException("Fail to continue after open", lastUnderstand.getWord()) : new PlmException("Fail to understand", failHistory);
                 src.rollback(lastUnderstand);
                 failHistory.computeIfAbsent(src.getRight(), k -> new ArrayList<>());
                 failHistory.get(src.getRight()).add(understandList.get(understandList.size() - 1));
                 understandList.remove(understandList.size() - 1);
-                separateToken(understandList, src, wordList, failHistory, contextList, sentenceList, compoundList);
+                separateToken(understandList, src, wordList, failHistory, contextList, sentenceList, compoundList, successHistory);
                 return;
             }
             final Toke best = sameList.get(sameList.size() - 1);
-            if(sameList.size() > 1 && !understandList.isEmpty()) {
+            if(sameList.size() > 1) {
+                int ss = sentenceList.size();
                 sameList.subList(0, sameList.size() - 1).stream()
                         .filter(item -> item.getRightContext() > 0)
                         .forEach(item -> {
                             var clone = new ArrayList<>(understandList);
-                            separateToken(clone, src.clone().pushToke(clone, item), wordList, failHistory, contextList, sentenceList, compoundList);
+                            separateToken(clone, src.clone().pushToke(clone, item), wordList, failHistory, contextList, sentenceList, compoundList, successHistory);
                         });
+                var branchList = sentenceList.subList(ss, sentenceList.size());
+                if(!branchList.isEmpty()) {
+                    successHistory.put(src.getRight(), lastUnderstand.getN(), branchList.stream().map(item -> item.subList(understandList.size(), item.size())).toList());
+                    System.out.print("(" + lastUnderstand.getWord() + " | " + src.getRight() + "): ");
+                    System.out.println(successHistory.get(src.getRight(), lastUnderstand.getN()).stream().map(item -> item.stream().map(Toke::getWord).toList()).toList());
+                }
                 if(best.getRightContext() < 1) best.otherOption = true;
             }
-            separateToken(understandList, src.pushToke(understandList, best), wordList, failHistory, contextList, sentenceList, compoundList);
+            separateToken(understandList, src.pushToke(understandList, best), wordList, failHistory, contextList, sentenceList, compoundList, successHistory);
         }
     }
     public List<Sentence> understand(String pureSrc) {
@@ -186,10 +194,11 @@ public class PlmCore {
         List<Sentence> sentenceList = new ArrayList<>();
         var contextList = plmContextRepo.findAll();
         var compoundList = llmWordCompoundRepo.findAll();
+        SuccessHistory successHistory = new SuccessHistory();
         for (var opener: openerList) {
             List<Toke> understandList = new ArrayList<>();
             try {
-                separateToken(understandList, understandTarget.pushToke(understandList, opener), wordList, failHistory, contextList, sentenceList, compoundList);
+                separateToken(understandList, understandTarget.pushToke(understandList, opener), wordList, failHistory, contextList, sentenceList, compoundList, successHistory);
             } catch (PlmException plmException) {
                 e = plmException;
             }
