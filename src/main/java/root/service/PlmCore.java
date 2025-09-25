@@ -130,15 +130,23 @@ public class PlmCore {
     void separateToken(List<Toke> understandList, UnderstandTarget src, final List<LlmWord> wordList, Map<String, List<LlmWord>> failHistory, List<PlmContext> contextList, List<Sentence> sentenceList, List<LlmWordCompound> compoundList, SuccessHistory successHistory) {
         if(src.success()) sentenceList.add(new Sentence(understandList, plmContextRepo));
         else {
-//            if(successHistory.get())
+            Toke lastUnderstand = understandList.get(understandList.size() - 1);
+            var sh = successHistory.get(src.getRight(), lastUnderstand.getN());
+            if(sh != null) {
+                sh.forEach(item -> {
+                    var merge = new ArrayList<>(understandList);
+                    merge.addAll(item);
+                    sentenceList.add(new Sentence(merge, plmContextRepo));
+                });
+                return;
+            }
             var h = failHistory.get(src.getRight());
             var sameList = wordList.stream()
                     .map(item -> {
                         Toke toke = src.getAvailableToke(item);
                         if(toke == null || understandList.isEmpty()) return toke;
-                        Toke last = understandList.get(understandList.size() - 1);
                         try {
-                            return smartStartBooster.rightContext(toke, last, toke, contextList, compoundList, wordList, last.isRightSpace(), last.otherOption);
+                            return smartStartBooster.rightContext(toke, lastUnderstand, toke, contextList, compoundList, wordList, lastUnderstand.isRightSpace(), lastUnderstand.otherOption);
                         } catch (PlmException e) {
                             return null;
                         }
@@ -152,12 +160,11 @@ public class PlmCore {
                     })
                     .sorted(Comparator.comparing(Toke::getRightContext))
                     .toList();
-            var lastUnderstand = understandList.get(understandList.size() - 1);
             if(sameList.isEmpty()) {
                 if(understandList.size() < 2) throw failHistory.isEmpty() ? new PlmException("Fail to continue after open", lastUnderstand.getWord()) : new PlmException("Fail to understand", failHistory);
                 src.rollback(lastUnderstand);
                 failHistory.computeIfAbsent(src.getRight(), k -> new ArrayList<>());
-                failHistory.get(src.getRight()).add(understandList.get(understandList.size() - 1));
+                failHistory.get(src.getRight()).add(lastUnderstand);
                 understandList.remove(understandList.size() - 1);
                 separateToken(understandList, src, wordList, failHistory, contextList, sentenceList, compoundList, successHistory);
                 return;
@@ -174,8 +181,6 @@ public class PlmCore {
                 var branchList = sentenceList.subList(ss, sentenceList.size());
                 if(!branchList.isEmpty()) {
                     successHistory.put(src.getRight(), lastUnderstand.getN(), branchList.stream().map(item -> item.subList(understandList.size(), item.size())).toList());
-                    System.out.print("(" + lastUnderstand.getWord() + " | " + src.getRight() + "): ");
-                    System.out.println(successHistory.get(src.getRight(), lastUnderstand.getN()).stream().map(item -> item.stream().map(Toke::getWord).toList()).toList());
                 }
                 if(best.getRightContext() < 1) best.otherOption = true;
             }
