@@ -48,6 +48,7 @@ public class SmartStartBooster {
                 .findAny()
                 .ifPresent(compound ->
                         rightContext(target, StaticUtil.selectWord(compound.getRightword(), wordList), right, contextList, compoundList, wordList, space, false));
+        if(target.rightContext == 0) target.rightContext += target.getWord().length() - 1; // '만들' 때문에 넣어봤다
         return target;
     }
 }
