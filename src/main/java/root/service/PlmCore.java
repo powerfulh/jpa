@@ -126,9 +126,8 @@ public class PlmCore {
     public void learnSrcBox() {
         plmSrcBoxRepo.findAll().forEach(item -> learn(item.src));
     }
-
     void separateToken(List<Toke> understandList, UnderstandTarget src, final List<LlmWord> wordList, Map<String, List<LlmWord>> failHistory, List<PlmContext> contextList, List<Sentence> sentenceList, List<LlmWordCompound> compoundList, SuccessHistory successHistory) {
-        if(src.success()) sentenceList.add(new Sentence(understandList, plmContextRepo));
+        if(src.success()) sentenceList.add(new Sentence(understandList, contextList));
         else {
             Toke lastUnderstand = understandList.get(understandList.size() - 1);
             var sh = successHistory.get(src.getRight(), lastUnderstand.getN());
@@ -136,7 +135,7 @@ public class PlmCore {
                 sh.forEach(item -> {
                     var merge = new ArrayList<>(understandList);
                     merge.addAll(item);
-                    sentenceList.add(new Sentence(merge, plmContextRepo));
+                    sentenceList.add(new Sentence(merge, contextList));
                 });
                 return;
             }
@@ -210,7 +209,7 @@ public class PlmCore {
         }
         if(sentenceList.isEmpty() && e != null) throw e; // 싹 다 실패한 경우 나중에는 편집 거리로 리트해봐야겠지
         sentenceList.sort(Comparator.comparing(item -> item.getContextPoint() * -1));
-        return sentenceList;
+        return sentenceList.size() > 9 ? sentenceList.subList(0, 9) : sentenceList;
     }
 
     @Transactional
