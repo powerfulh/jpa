@@ -169,21 +169,23 @@ public class PlmCore {
                 return;
             }
             final Toke best = sameList.get(sameList.size() - 1);
+            int ss = sentenceList.size();
             if(sameList.size() > 1) {
-                int ss = sentenceList.size();
                 sameList.subList(0, sameList.size() - 1).stream()
                         .filter(item -> item.getRightContext() > 0)
                         .forEach(item -> {
                             var clone = new ArrayList<>(understandList);
                             separateToken(clone, src.clone().pushToke(clone, item), wordList, failHistory, contextList, sentenceList, compoundList, successHistory);
                         });
-                var branchList = sentenceList.subList(ss, sentenceList.size());
-                if(!branchList.isEmpty()) {
-                    successHistory.put(src.getRight(), lastUnderstand.getN(), branchList.stream().map(item -> item.subList(understandList.size(), item.size())).toList());
-                }
                 if(best.getRightContext() < 1) best.otherOption = true;
             }
+            final String right = src.getRight();
+            final int understandSize = understandList.size();
             separateToken(understandList, src.pushToke(understandList, best), wordList, failHistory, contextList, sentenceList, compoundList, successHistory);
+            var branchList = sentenceList.subList(ss, sentenceList.size());
+            if(!branchList.isEmpty()) {
+                successHistory.put(right, lastUnderstand.getN(), branchList.stream().map(item -> item.subList(understandSize, item.size())).toList());
+            }
         }
     }
     public List<Sentence> understand(String pureSrc) {
