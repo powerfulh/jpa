@@ -245,7 +245,7 @@ public class PlmCore {
     @Transactional
     public void reunderstand() {
         beforeUnderstandBox();
-        understandBoxRepo.findAll().stream().filter(box -> box.src.length() < 90).forEach(box -> understand(box.src).get(0).box(box, understandBoxWordRepo));
+        understandBoxRepo.findAll().stream().filter(box -> box.src.length() < 100).forEach(box -> understand(box.src).get(0).box(box, understandBoxWordRepo));
     }
 }
 
