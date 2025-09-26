@@ -48,7 +48,11 @@ public class SmartStartBooster {
                 .findAny()
                 .ifPresent(compound ->
                         rightContext(target, StaticUtil.selectWord(compound.getRightword(), wordList), right, contextList, compoundList, wordList, space, false));
-        if(target.rightContext == 0) target.rightContext += target.getWord().length() - 1; // '만들' 때문에 넣어봤다
+        return target;
+    }
+    public Toke lengthRate(Toke target) {
+        // 문맥이 없어 모든 분기가 탈락하고 마지막 놈만 잡히는 것을 방지하려고 최종적으로 후보의 길이가 긴 녀석을 고르도록 한다
+        if(target.rightContext == 0) target.rightContext = target.getWord().length() - 1;
         return target;
     }
 }

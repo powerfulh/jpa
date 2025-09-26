@@ -145,10 +145,11 @@ public class PlmCore {
                         Toke toke = src.getAvailableToke(item);
                         if(toke == null || understandList.isEmpty()) return toke;
                         try {
-                            return smartStartBooster.rightContext(toke, lastUnderstand, toke, contextList, compoundList, wordList, lastUnderstand.isRightSpace(), lastUnderstand.otherOption);
+                            smartStartBooster.rightContext(toke, lastUnderstand, toke, contextList, compoundList, wordList, lastUnderstand.isRightSpace(), lastUnderstand.otherOption);
                         } catch (PlmException e) {
                             return null;
                         }
+                        return smartStartBooster.lengthRate(toke);
                     })
                     .filter(item -> {
                         if(item != null) {
