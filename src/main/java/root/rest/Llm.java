@@ -56,4 +56,8 @@ public class Llm {
     public void reunderstandBox() {
         plmCore.reunderstand();
     }
+    @PostMapping("/commit")
+    public void commit(String src, boolean learnContext) {
+        plmCore.understandThenCommit(src, learnContext);
+    }
 }

@@ -68,3 +68,21 @@ create table plm_understand_box_word(
 	unique(understand, i),
 	foreign key (understand) references plm_understand_box(n)
 );
+create table plm_ultron_sentence(
+	n int primary key auto_increment,
+	target int,
+	opener int not null,
+	updated_date datetime default now(),
+	foreign key (target) references plm_ultron_sentence(n),
+	foreign key (opener) references llm_word(n)
+);
+create table plm_ultron_context(
+	n int primary key auto_increment,
+	sentence int not null,
+	context int not null,
+	i int not null,
+	updated_date datetime default now(),
+	unique(sentence, i),
+	foreign key (sentence) references plm_ultron_sentence(n),
+	foreign key (context) references plm_context(n)
+);

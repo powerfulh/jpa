@@ -21,11 +21,13 @@ public class PlmCore {
     final UnderstandBoxRepo understandBoxRepo;
     final UnderstandBoxWordRepo understandBoxWordRepo;
     final SmartStartBooster smartStartBooster;
+    final PlmUltronSentenceRepo ultronSentenceRepo;
+    final PlmUltronContextRepo ultronContextRepo;
 
     final String symbolType = "기호";
     final String learnedCompoundType = "학습 결합";
 
-    public PlmCore(LlmWordRepo llmWordRepo, PlmLearnRepo plmLearnRepo, LlmWordCompoundRepo llmWordCompoundRepo, PlmSrcBoxRepo plmSrcBoxRepo, ReplaceRepeatedChars replaceRepeatedChars, PlmContextRepo plmContextRepo, UnderstandBoxRepo understandBoxRepo, UnderstandBoxWordRepo understandBoxWordRepo, SmartStartBooster smartStartBooster) {
+    public PlmCore(LlmWordRepo llmWordRepo, PlmLearnRepo plmLearnRepo, LlmWordCompoundRepo llmWordCompoundRepo, PlmSrcBoxRepo plmSrcBoxRepo, ReplaceRepeatedChars replaceRepeatedChars, PlmContextRepo plmContextRepo, UnderstandBoxRepo understandBoxRepo, UnderstandBoxWordRepo understandBoxWordRepo, SmartStartBooster smartStartBooster, PlmUltronSentenceRepo ultronSentenceRepo, PlmUltronContextRepo ultronContextRepo) {
         this.llmWordRepo = llmWordRepo;
         this.plmLearnRepo = plmLearnRepo;
         this.llmWordCompoundRepo = llmWordCompoundRepo;
@@ -35,6 +37,8 @@ public class PlmCore {
         this.understandBoxRepo = understandBoxRepo;
         this.understandBoxWordRepo = understandBoxWordRepo;
         this.smartStartBooster = smartStartBooster;
+        this.ultronSentenceRepo = ultronSentenceRepo;
+        this.ultronContextRepo = ultronContextRepo;
     }
 
     void learn(String w, String src, String rightword, String type) {
@@ -246,6 +250,13 @@ public class PlmCore {
     public void reunderstand() {
         beforeUnderstandBox();
         understandBoxRepo.findAll().stream().filter(box -> box.src.length() < 100).forEach(box -> understand(box.src).get(0).box(box, understandBoxWordRepo));
+    }
+
+    @Transactional
+    public void understandThenCommit(String pureSrc, boolean learnContext) {
+        Sentence sentence = understand(pureSrc).get(0);
+        if(learnContext) sentence.learnContext(plmContextRepo);
+        sentence.commit(ultronContextRepo, plmContextRepo, ultronSentenceRepo.save(new PlmUltronSentence(sentence.get(0).getN())).getN());
     }
 }
 

@@ -32,7 +32,7 @@ public class PlmContext {
         return rightword;
     }
 
-    public int getSpace() {
-        return space;
+    public Integer getN() {
+        return n;
     }
 }
