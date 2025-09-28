@@ -5,6 +5,7 @@ import root.entity.plm.PlmUltronContext;
 import root.entity.plm.PlmUnderstandBox;
 import root.entity.plm.PlmUnderstandBoxWord;
 import root.exception.PlmException;
+import root.plm.entity.Context;
 import root.repo.plm.PlmContextRepo;
 import root.repo.plm.PlmUltronContextRepo;
 import root.repo.plm.UnderstandBoxWordRepo;
@@ -15,10 +16,10 @@ import java.util.stream.Collectors;
 public class Sentence extends ArrayList<Toke> {
     final int contextPoint;
 
-    public Sentence(List<Toke> list, List<PlmContext> contextList) {
+    public Sentence(List<Toke> list, List<Context> contextList) {
         super(list);
         var openerContext = contextList.stream().filter(StaticUtil.getContextFinder(StaticUtil.opener, get(0).getN())).findAny().orElse(null);
-        int p = openerContext == null ? 0 : (openerContext.cnt * get(0).getWord().length());
+        int p = openerContext == null ? 0 : (openerContext.getCnt() * get(0).getWord().length());
         if(p == 0) p = get(0).getWord().length() - 1; // 오프너도 마찬가지로 오프너 콘텍스트가 없더라도 길이가 긴 것부터 잡게 해보자
         contextPoint = p + list.stream().mapToInt(Toke::getRightContext).sum();
     }

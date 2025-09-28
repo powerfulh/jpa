@@ -3,8 +3,8 @@ package root.plm;
 import org.springframework.stereotype.Component;
 import root.entity.plm.LlmWord;
 import root.entity.plm.LlmWordCompound;
-import root.entity.plm.PlmContext;
 import root.exception.PlmException;
+import root.plm.entity.Context;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,11 +19,11 @@ public class SmartStartBooster {
     final String zeroType = "0";
     final List<Integer> issue29except = List.of(2506, 105, 3876);
 
-    int contextPoint(List<PlmContext> contextList, int left, int right, boolean space, List<Integer> history) {
+    int contextPoint(List<Context> contextList, int left, int right, boolean space, List<Integer> history) {
         history.add(right);
-        return contextList.stream().filter(StaticUtil.getContextFinder(left, right)).mapToInt(item -> space ? item.space : item.cnt).sum();
+        return contextList.stream().filter(StaticUtil.getContextFinder(left, right)).mapToInt(item -> space ? item.getSpace() : item.getCnt()).sum();
     }
-    public Toke rightContext(Toke target, LlmWord left, LlmWord right, List<PlmContext> contextList, List<LlmWordCompound> compoundList, List<LlmWord> wordList, boolean space, boolean otherOption) {
+    public Toke rightContext(Toke target, LlmWord left, LlmWord right, List<Context> contextList, List<LlmWordCompound> compoundList, List<LlmWord> wordList, boolean space, boolean otherOption) {
         target.contextHistory.computeIfAbsent(left.getN(), k -> new ArrayList<>());
         var h = target.contextHistory.get(left.getN());
         if(!h.isEmpty() && h.stream().anyMatch(item -> item.equals(right.getN()))) return null;

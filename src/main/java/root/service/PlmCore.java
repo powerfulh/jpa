@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import root.entity.plm.*;
 import root.exception.PlmException;
 import root.plm.*;
+import root.plm.entity.Context;
 import root.repo.plm.*;
 
 import java.util.*;
@@ -130,7 +131,7 @@ public class PlmCore {
     public void learnSrcBox() {
         plmSrcBoxRepo.findAll().forEach(item -> learn(item.src));
     }
-    void separateToken(List<Toke> understandList, UnderstandTarget src, final List<LlmWord> wordList, Map<String, List<LlmWord>> failHistory, List<PlmContext> contextList, List<Sentence> sentenceList, List<LlmWordCompound> compoundList, SuccessHistory successHistory) {
+    void separateToken(List<Toke> understandList, UnderstandTarget src, final List<LlmWord> wordList, Map<String, List<LlmWord>> failHistory, List<Context> contextList, List<Sentence> sentenceList, List<LlmWordCompound> compoundList, SuccessHistory successHistory) {
         if(src.success()) sentenceList.add(new Sentence(understandList, contextList));
         else {
             Toke lastUnderstand = understandList.get(understandList.size() - 1);
@@ -203,7 +204,7 @@ public class PlmCore {
         PlmException e = null;
         Map<String, List<LlmWord>> failHistory = new HashMap<>();
         List<Sentence> sentenceList = new ArrayList<>();
-        var contextList = plmContextRepo.findAll();
+        List<Context> contextList = plmContextRepo.findAll().stream().map(item -> (Context) item).toList();
         var compoundList = llmWordCompoundRepo.findAll();
         SuccessHistory successHistory = new SuccessHistory();
         for (var opener: openerList) {
