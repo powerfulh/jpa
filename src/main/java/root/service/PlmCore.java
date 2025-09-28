@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import root.entity.plm.*;
 import root.exception.PlmException;
 import root.plm.*;
+import root.plm.entity.Compound;
 import root.plm.entity.Context;
 import root.plm.entity.Word;
 import root.repo.plm.*;
@@ -74,7 +75,7 @@ public class PlmCore {
                 if(w.isEmpty()) continue;
                 for (var wi: w) {
                     for (var compound: llmWordCompoundRepo.findByRightword(wi.getN())) {
-                        String c = llmWordRepo.findById(compound.word).orElseThrow().getWord();
+                        String c = llmWordRepo.findById(compound.getWord()).orElseThrow().getWord();
                         if(item.endsWith(c)) {
                             target = item.substring(0, item.length() - c.length());
                             cutter = c;
@@ -132,7 +133,7 @@ public class PlmCore {
     public void learnSrcBox() {
         plmSrcBoxRepo.findAll().forEach(item -> learn(item.src));
     }
-    void separateToken(List<Toke> understandList, UnderstandTarget src, final List<LlmWord> wordList, Map<String, List<Word>> failHistory, List<Context> contextList, List<Sentence> sentenceList, List<LlmWordCompound> compoundList, SuccessHistory successHistory) {
+    void separateToken(List<Toke> understandList, UnderstandTarget src, final List<LlmWord> wordList, Map<String, List<Word>> failHistory, List<Context> contextList, List<Sentence> sentenceList, List<Compound> compoundList, SuccessHistory successHistory) {
         if(src.success()) sentenceList.add(new Sentence(understandList, contextList));
         else {
             Toke lastUnderstand = understandList.get(understandList.size() - 1);
@@ -206,7 +207,7 @@ public class PlmCore {
         Map<String, List<Word>> failHistory = new HashMap<>();
         List<Sentence> sentenceList = new ArrayList<>();
         List<Context> contextList = plmContextRepo.findAll().stream().map(item -> (Context) item).toList();
-        var compoundList = llmWordCompoundRepo.findAll();
+        var compoundList = llmWordCompoundRepo.findAll().stream().map(item -> (Compound) item).toList();
         SuccessHistory successHistory = new SuccessHistory();
         for (var opener: openerList) {
             List<Toke> understandList = new ArrayList<>();
