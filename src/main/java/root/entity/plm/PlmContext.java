@@ -5,11 +5,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.UpdateTimestamp;
+import root.plm.entity.Twoken;
 
 import java.time.LocalDateTime;
 
 @Entity
-public class PlmContext {
+public class PlmContext implements Twoken {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Integer n;
