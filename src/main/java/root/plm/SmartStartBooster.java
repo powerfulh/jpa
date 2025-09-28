@@ -1,8 +1,6 @@
 package root.plm;
 
 import org.springframework.stereotype.Component;
-import root.entity.plm.LlmWord;
-import root.exception.PlmException;
 import root.plm.entity.Compound;
 import root.plm.entity.Context;
 import root.plm.entity.Word;
@@ -24,7 +22,7 @@ public class SmartStartBooster {
         history.add(right);
         return contextList.stream().filter(StaticUtil.getContextFinder(left, right)).mapToInt(item -> space ? item.getSpace() : item.getCnt()).sum();
     }
-    public Toke rightContext(Toke target, Word left, Word right, List<Context> contextList, List<Compound> compoundList, List<LlmWord> wordList, boolean space, boolean otherOption) {
+    public Toke rightContext(Toke target, Word left, Word right, List<Context> contextList, List<Compound> compoundList, List<Word> wordList, boolean space, boolean otherOption) {
         target.contextHistory.computeIfAbsent(left.getN(), k -> new ArrayList<>());
         var h = target.contextHistory.get(left.getN());
         if(!h.isEmpty() && h.stream().anyMatch(item -> item.equals(right.getN()))) return null;

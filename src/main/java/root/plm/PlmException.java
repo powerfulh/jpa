@@ -1,4 +1,4 @@
-package root.exception;
+package root.plm;
 
 import root.plm.entity.Word;
 

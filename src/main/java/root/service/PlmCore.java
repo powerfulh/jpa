@@ -3,7 +3,7 @@ package root.service;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import root.entity.plm.*;
-import root.exception.PlmException;
+import root.plm.PlmException;
 import root.plm.*;
 import root.plm.entity.Compound;
 import root.plm.entity.Context;
@@ -133,7 +133,7 @@ public class PlmCore {
     public void learnSrcBox() {
         plmSrcBoxRepo.findAll().forEach(item -> learn(item.src));
     }
-    void separateToken(List<Toke> understandList, UnderstandTarget src, final List<LlmWord> wordList, Map<String, List<Word>> failHistory, List<Context> contextList, List<Sentence> sentenceList, List<Compound> compoundList, SuccessHistory successHistory) {
+    void separateToken(List<Toke> understandList, UnderstandTarget src, final List<Word> wordList, Map<String, List<Word>> failHistory, List<Context> contextList, List<Sentence> sentenceList, List<Compound> compoundList, SuccessHistory successHistory) {
         if(src.success()) sentenceList.add(new Sentence(understandList, contextList));
         else {
             Toke lastUnderstand = understandList.get(understandList.size() - 1);
@@ -199,7 +199,7 @@ public class PlmCore {
     public List<Sentence> understand(String pureSrc) {
         var symbols = llmWordRepo.findByType(symbolType).stream().map(LlmWord::getWord).collect(Collectors.joining()).toCharArray();
         final String src = replaceRepeatedChars.replaceRepeatedChars(pureSrc.replaceAll("\\s", ""), symbols);
-        var wordList = llmWordRepo.findByTypeNot("opener");
+        var wordList = llmWordRepo.findByTypeNot("opener").stream().map(item -> (Word) item).toList();
         final UnderstandTarget understandTarget = new UnderstandTarget(replaceRepeatedChars.replaceRepeatedChars(pureSrc, symbols));
         var openerList = wordList.stream().map(understandTarget::getAvailableToke).filter(Objects::nonNull).toList();
         if (openerList.isEmpty()) throw new PlmException("Fail to set the opening word", src);
