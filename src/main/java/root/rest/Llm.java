@@ -2,8 +2,6 @@ package root.rest;
 
 import org.springframework.web.bind.annotation.*;
 import root.entity.plm.LlmWord;
-import root.plm.MindMap;
-import root.plm.MindMapper;
 import root.plm.Sentence;
 import root.repo.plm.LlmWordRepo;
 import root.service.PlmCore;
@@ -16,12 +14,10 @@ import java.util.Map;
 public class Llm {
     final LlmWordRepo llmWordRepo;
     final PlmCore plmCore;
-    final MindMapper mindMapper;
 
-    public Llm(LlmWordRepo llmWordRepo, PlmCore plmCore, MindMapper mindMapper) {
+    public Llm(LlmWordRepo llmWordRepo, PlmCore plmCore) {
         this.llmWordRepo = llmWordRepo;
         this.plmCore = plmCore;
-        this.mindMapper = mindMapper;
     }
 
     @GetMapping("/{w}")
@@ -35,10 +31,6 @@ public class Llm {
     @PostMapping("/learnbox")
     public void learnBox() {
         plmCore.learnSrcBox();
-    }
-    @GetMapping("/mindmap/{n}")
-    public MindMap getMindMap(@PathVariable int n) {
-        return mindMapper.map(n);
     }
     @GetMapping("/understand")
     public List<Map<String, Object>> understand(String src) {
