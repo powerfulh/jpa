@@ -6,6 +6,7 @@ import root.entity.plm.*;
 import root.exception.PlmException;
 import root.plm.*;
 import root.plm.entity.Context;
+import root.plm.entity.Word;
 import root.repo.plm.*;
 
 import java.util.*;
@@ -131,7 +132,7 @@ public class PlmCore {
     public void learnSrcBox() {
         plmSrcBoxRepo.findAll().forEach(item -> learn(item.src));
     }
-    void separateToken(List<Toke> understandList, UnderstandTarget src, final List<LlmWord> wordList, Map<String, List<LlmWord>> failHistory, List<Context> contextList, List<Sentence> sentenceList, List<LlmWordCompound> compoundList, SuccessHistory successHistory) {
+    void separateToken(List<Toke> understandList, UnderstandTarget src, final List<LlmWord> wordList, Map<String, List<Word>> failHistory, List<Context> contextList, List<Sentence> sentenceList, List<LlmWordCompound> compoundList, SuccessHistory successHistory) {
         if(src.success()) sentenceList.add(new Sentence(understandList, contextList));
         else {
             Toke lastUnderstand = understandList.get(understandList.size() - 1);
@@ -202,7 +203,7 @@ public class PlmCore {
         var openerList = wordList.stream().map(understandTarget::getAvailableToke).filter(Objects::nonNull).toList();
         if (openerList.isEmpty()) throw new PlmException("Fail to set the opening word", src);
         PlmException e = null;
-        Map<String, List<LlmWord>> failHistory = new HashMap<>();
+        Map<String, List<Word>> failHistory = new HashMap<>();
         List<Sentence> sentenceList = new ArrayList<>();
         List<Context> contextList = plmContextRepo.findAll().stream().map(item -> (Context) item).toList();
         var compoundList = llmWordCompoundRepo.findAll();
@@ -220,9 +221,25 @@ public class PlmCore {
         return sentenceList.size() > 9 ? sentenceList.subList(0, 9) : sentenceList;
     }
 
+    void learnSentence(Sentence sentence) {
+        var contextList = plmContextRepo.findAll();
+        for (int i = 0; i < sentence.size() - 1; i++) {
+            var context = sentence.getContext(i, i + 1, contextList);
+            if(context == null) {
+                context = new PlmContext();
+                context.leftword = sentence.get(i).getN();
+                context.rightword = sentence.get(i + 1).getN();
+                if(sentence.get(i).isRightSpace()) context.space++;
+                else context.cnt++;
+                plmContextRepo.save(context);
+                contextList.add(context);
+            } else if(sentence.get(i).isRightSpace()) context.space++;
+            else context.cnt++;
+        }
+    }
     @Transactional
     public void understandThenLearn(String pureSrc) {
-        understand(pureSrc).get(0).learnContext(plmContextRepo);
+        learnSentence(understand(pureSrc).get(0));
     }
 
     void beforeUnderstandBox() {
@@ -230,11 +247,20 @@ public class PlmCore {
         understandBoxRepo.deleteByActivate(false);
         understandBoxRepo.flush();
     }
+    void boxSentence(Sentence sentence, PlmUnderstandBox box) {
+        for (int i = 0; i < sentence.size(); i++) {
+            var word = new PlmUnderstandBoxWord();
+            word.understand = box.getN();
+            word.i = i;
+            word.word = sentence.get(i).getN();
+            understandBoxWordRepo.save(word);
+        }
+    }
     @Transactional
     public void understandBox() {
         beforeUnderstandBox();
         var boxList = understandBoxRepo.findAll();
-        boxList.forEach(box -> understand(box.src).get(0).box(box, understandBoxWordRepo));
+        boxList.forEach(box -> boxSentence(understand(box.src).get(0), box));
         List<String> list = boxList.stream().map(item -> item.src).toList();
         plmSrcBoxRepo.findAll().stream()
                 .filter(item -> !list.contains(item.src))
@@ -243,21 +269,33 @@ public class PlmCore {
             box.src = item.src;
             box.activate = true;
             understandBoxRepo.save(box);
-            understand(item.src).get(0).box(box, understandBoxWordRepo);
+            boxSentence(understand(item.src).get(0), box);
         });
     }
 
     @Transactional
     public void reunderstand() {
         beforeUnderstandBox();
-        understandBoxRepo.findAll().stream().filter(box -> box.src.length() < 100).forEach(box -> understand(box.src).get(0).box(box, understandBoxWordRepo));
+        understandBoxRepo.findAll().stream()
+                .filter(box -> box.src.length() < 110)
+                .forEach(box -> boxSentence(understand(box.src).get(0), box));
     }
 
+    void commitSentence(Sentence sentence, int usn) {
+        var contextList = plmContextRepo.findAll();
+        for (int i = 0; i < sentence.size() - 1; i++) {
+            var context = new PlmUltronContext();
+            context.sentence = usn;
+            context.context = Optional.of(sentence.getContext(i, i + 1, contextList)).orElseThrow(() -> new PlmException("No context", sentence.stream().map(Toke::getWord).collect(Collectors.joining()))).getN();
+            context.i = i;
+            ultronContextRepo.save(context);
+        }
+    }
     @Transactional
     public void understandThenCommit(String pureSrc, boolean learnContext) {
         Sentence sentence = understand(pureSrc).get(0);
-        if(learnContext) sentence.learnContext(plmContextRepo);
-        sentence.commit(ultronContextRepo, plmContextRepo, ultronSentenceRepo.save(new PlmUltronSentence(sentence.get(0).getN())).getN());
+        if(learnContext) learnSentence(sentence);
+        commitSentence(sentence, ultronSentenceRepo.save(new PlmUltronSentence(sentence.get(0).getN())).getN());
     }
 }
 

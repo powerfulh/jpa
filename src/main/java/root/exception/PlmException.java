@@ -1,6 +1,6 @@
 package root.exception;
 
-import root.entity.plm.LlmWord;
+import root.plm.entity.Word;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -15,7 +15,7 @@ public class PlmException extends RuntimeException {
       info.put(title, data);
     }
 
-    public PlmException(String failToUnderstand, Map<String, List<LlmWord>> failHistory) {
+    public PlmException(String failToUnderstand, Map<String, List<Word>> failHistory) {
       info = new HashMap<>();
       info.put(failToUnderstand, failHistory.keySet().stream().map(item -> {
         Map<String, Object> m = new HashMap<>();

@@ -4,10 +4,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import root.plm.entity.Ntity;
+import root.plm.entity.Word;
 
 @Entity
-public class LlmWord implements Ntity {
+public class LlmWord implements Word {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Integer n;

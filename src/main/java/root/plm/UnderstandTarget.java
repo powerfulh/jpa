@@ -1,6 +1,6 @@
 package root.plm;
 
-import root.entity.plm.LlmWord;
+import root.plm.entity.Word;
 
 import java.util.List;
 
@@ -15,7 +15,7 @@ public class UnderstandTarget implements Cloneable {
     public String getRight() {
         return src.substring(currentCut);
     }
-    public Toke getAvailableToke(LlmWord word) {
+    public Toke getAvailableToke(Word word) {
         final String right = getRight();
         int ignored = 0;
         int wordSpace = 0;

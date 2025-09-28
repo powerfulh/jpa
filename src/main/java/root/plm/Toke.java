@@ -1,14 +1,14 @@
 package root.plm;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import root.entity.plm.LlmWord;
+import root.plm.entity.Word;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Toke extends LlmWord {
-    final LlmWord src;
+public class Toke implements Word {
+    final Word src;
     final int start;
     final int end;
     final boolean rightSpace;
@@ -17,14 +17,11 @@ public class Toke extends LlmWord {
     @JsonIgnore
     public boolean otherOption;
 
-    public Toke(LlmWord llmWord, int start, int end, boolean rightSpace) {
+    public Toke(Word llmWord, int start, int end, boolean rightSpace) {
         src = llmWord;
         this.start = start;
         this.end = end;
         this.rightSpace = rightSpace;
-        word = src.getWord();
-        type = src.getType();
-        memo = src.getMemo();
     }
 
     @Override
@@ -38,5 +35,20 @@ public class Toke extends LlmWord {
 
     public int getRightContext() {
         return rightContext;
+    }
+
+    @Override
+    public String getWord() {
+        return src.getWord();
+    }
+
+    @Override
+    public String getType() {
+        return src.getType();
+    }
+
+    @Override
+    public String getMemo() {
+        return src.getMemo();
     }
 }
