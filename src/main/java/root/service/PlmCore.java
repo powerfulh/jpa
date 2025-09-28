@@ -23,14 +23,14 @@ public class PlmCore {
     final PlmContextRepo plmContextRepo;
     final UnderstandBoxRepo understandBoxRepo;
     final UnderstandBoxWordRepo understandBoxWordRepo;
-    final SmartStartBooster smartStartBooster;
+    final ContextCore contextCore;
     final PlmUltronSentenceRepo ultronSentenceRepo;
     final PlmUltronContextRepo ultronContextRepo;
 
     final String symbolType = "기호";
     final String learnedCompoundType = "학습 결합";
 
-    public PlmCore(LlmWordRepo llmWordRepo, PlmLearnRepo plmLearnRepo, LlmWordCompoundRepo llmWordCompoundRepo, PlmSrcBoxRepo plmSrcBoxRepo, ReplaceRepeatedChars replaceRepeatedChars, PlmContextRepo plmContextRepo, UnderstandBoxRepo understandBoxRepo, UnderstandBoxWordRepo understandBoxWordRepo, SmartStartBooster smartStartBooster, PlmUltronSentenceRepo ultronSentenceRepo, PlmUltronContextRepo ultronContextRepo) {
+    public PlmCore(LlmWordRepo llmWordRepo, PlmLearnRepo plmLearnRepo, LlmWordCompoundRepo llmWordCompoundRepo, PlmSrcBoxRepo plmSrcBoxRepo, ReplaceRepeatedChars replaceRepeatedChars, PlmContextRepo plmContextRepo, UnderstandBoxRepo understandBoxRepo, UnderstandBoxWordRepo understandBoxWordRepo, ContextCore contextCore, PlmUltronSentenceRepo ultronSentenceRepo, PlmUltronContextRepo ultronContextRepo) {
         this.llmWordRepo = llmWordRepo;
         this.plmLearnRepo = plmLearnRepo;
         this.llmWordCompoundRepo = llmWordCompoundRepo;
@@ -39,7 +39,7 @@ public class PlmCore {
         this.plmContextRepo = plmContextRepo;
         this.understandBoxRepo = understandBoxRepo;
         this.understandBoxWordRepo = understandBoxWordRepo;
-        this.smartStartBooster = smartStartBooster;
+        this.contextCore = contextCore;
         this.ultronSentenceRepo = ultronSentenceRepo;
         this.ultronContextRepo = ultronContextRepo;
     }
@@ -150,7 +150,7 @@ public class PlmCore {
         for (var opener: openerList) {
             List<Toke> understandList = new ArrayList<>();
             try {
-                StaticUtil.separateToken(understandList, understandTarget.pushToke(understandList, opener), wordList, failHistory, contextList, sentenceList, compoundList, successHistory, smartStartBooster);
+                StaticUtil.separateToken(understandList, understandTarget.pushToke(understandList, opener), wordList, failHistory, contextList, sentenceList, compoundList, successHistory, contextCore);
             } catch (PlmException plmException) {
                 e = plmException;
             }
