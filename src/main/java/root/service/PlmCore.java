@@ -225,7 +225,8 @@ public class PlmCore {
         for (int i = 0; i < sentence.size() - 1; i++) {
             var context = new PlmUltronContext();
             context.sentence = usn;
-            context.context = Optional.of(sentence.getContext(i, i + 1, contextList)).orElseThrow(() -> new PlmException("No context", sentence.stream().map(Toke::getWord).collect(Collectors.joining()))).getN();
+            String currentTwo = sentence.get(i).getWord().concat(sentence.get(i).isRightSpace() ? " " : "").concat(sentence.get(i + 1).getWord());
+            context.context = Optional.ofNullable(sentence.getContext(i, i + 1, contextList)).orElseThrow(() -> new PlmException("No context", currentTwo)).getN();
             context.i = i;
             ultronContextRepo.save(context);
         }
