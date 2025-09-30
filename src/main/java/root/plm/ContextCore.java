@@ -38,7 +38,7 @@ public class ContextCore {
         var h = target.contextHistory.get(left.getN());
         if(!h.isEmpty() && h.stream().anyMatch(item -> item.equals(right.getN()))) return null;
         target.rightContext += contextPoint(contextList, left.getN(), right.getN(), space, h);
-        smartStartBoost(left, right, target, space, otherOption);
+        smartStartBoost(left, right, target, space, target.rightContext < 1 && otherOption);
         target.rightContext *= left.getWord().length() + target.getWord().length();
         compoundList.stream()
                 .filter(item -> right.getN().equals(item.getWord()))
