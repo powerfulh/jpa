@@ -28,6 +28,7 @@ public class ContextCore {
         if(space && right.getType().equals(afterType)) target.rightContext--;
         if(!space) {
             if(left.getType().equals(afterType) && (right.getType().equals(supportType) || right.getType().equals(zeroType)) && !issue29except.contains(right.getN()) && otherOption) throw new PlmException("Maybe wrong", left.getWord() + "+" + target.getWord());
+            if(left.getType().equals(afterType) && right.getType().equals(thingType)) target.rightContext--;
             final boolean leftWrapA = left.getType().equals(thingType) || left.getType().equals("대명사");
             if(leftWrapA && right.getType().equals(supportType)) target.rightContext++;
             if(leftWrapA && right.getType().equals("1")) target.rightContext--;
