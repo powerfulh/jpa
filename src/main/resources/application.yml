@@ -8,3 +8,4 @@ spring:
 logging:
   pattern:
     console: "%-5level %logger{36} - %msg [%thread]%n"
+#    console: "%d{MMdd HH:mm:ss} %-5level %logger{36} - %msg [%thread]%n"
