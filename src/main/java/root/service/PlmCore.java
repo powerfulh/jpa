@@ -2,6 +2,8 @@ package root.service;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import root.entity.plm.*;
 import root.plm.PlmException;
 import root.plm.*;
@@ -29,6 +31,8 @@ public class PlmCore {
 
     final String symbolType = "기호";
     final String learnedCompoundType = "학습 결합";
+
+    final Logger logger = LoggerFactory.getLogger(PlmCore.class);
 
     public PlmCore(LlmWordRepo llmWordRepo, PlmLearnRepo plmLearnRepo, LlmWordCompoundRepo llmWordCompoundRepo, PlmSrcBoxRepo plmSrcBoxRepo, ReplaceRepeatedChars replaceRepeatedChars, PlmContextRepo plmContextRepo, UnderstandBoxRepo understandBoxRepo, UnderstandBoxWordRepo understandBoxWordRepo, ContextCore contextCore, PlmUltronSentenceRepo ultronSentenceRepo, PlmUltronContextRepo ultronContextRepo) {
         this.llmWordRepo = llmWordRepo;
@@ -147,7 +151,9 @@ public class PlmCore {
         List<Context> contextList = plmContextRepo.findAll().stream().map(item -> (Context) item).toList();
         var compoundList = llmWordCompoundRepo.findAll().stream().map(item -> (Compound) item).toList();
         SuccessHistory successHistory = new SuccessHistory();
+        logger.info("opener cnt: {}", openerList.size());
         for (var opener: openerList) {
+            logger.info("understanding with opener: {}", opener.getWord());
             List<Toke> understandList = new ArrayList<>();
             try {
                 StaticUtil.separateToken(understandList, understandTarget.pushToke(understandList, opener), wordList, failHistory, contextList, sentenceList, compoundList, successHistory, contextCore);
