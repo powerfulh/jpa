@@ -86,3 +86,13 @@ create table plm_ultron_context(
 	foreign key (sentence) references plm_ultron_sentence(n),
 	foreign key (context) references plm_context(n)
 );
+create view plm_token as
+select os.n, csq.target, csq.context, c.leftword, c.rightword, row_number() over(partition by os.n order by csq.target, csq.i) ci
+from plm_ultron_sentence ins, plm_ultron_sentence os, (
+SELECT s.target, s.n, uc.i, uc.context from plm_ultron_sentence s, plm_ultron_context uc
+where s.n = uc.sentence
+) csq, plm_context c
+where ins.n = os.target
+and if(csq.target is null, ins.n = csq.n, os.n = csq.n)
+and csq.context = c.n
+;
