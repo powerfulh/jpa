@@ -105,3 +105,7 @@ and '조사' in (lw.`type`, rw.`type`)
 ) csq on w.n = csq.word
 where w.`type` = '조사' or csq.word is not null
 ;
+create table plm_ultron_closer(
+	context int primary key,
+	foreign key(context) references plm_context(n)
+);
