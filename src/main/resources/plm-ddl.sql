@@ -96,10 +96,10 @@ where ins.n = os.target
 and if(csq.target is null, ins.n = csq.n, os.n = csq.n)
 and csq.context = c.n
 ;
-create view plm_cutter as
-select w.n wn, ifnull(if(csq.couple, csq.word, csq.cn), w.n) n, w.word, w.type
+CREATE OR REPLACE view plm_cutter as
+select w.n wn, ifnull(if(csq.couple, csq.word, csq.cn), w.n) n, w.type = '조사' or csq.lc very_first, w.word
 from llm_word w left join (
-select wc.word, lw.`type` = '조사' and rw.type = '조사' couple, if(lw.`type` = '조사', lw.n, rw.n) cn from llm_word_compound wc, llm_word lw, llm_word rw
+select wc.word, lw.`type` = '조사' and rw.type = '조사' couple, if(lw.`type` = '조사', lw.n, rw.n) cn, lw.type = '조사' lc from llm_word_compound wc, llm_word lw, llm_word rw
 where wc.leftword = lw.n and wc.rightword = rw.n
 and '조사' in (lw.`type`, rw.`type`)
 ) csq on w.n = csq.word
