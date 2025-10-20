@@ -205,11 +205,11 @@ public class PlmCore {
     @Transactional
     public void understandBox() {
         beforeUnderstandBox();
-        var boxList = understandBoxRepo.findAll().stream().filter(box -> box.src.length() < 110).toList();
+        var boxList = understandBoxRepo.findAll().stream().filter(box -> box.src.length() < 100).toList();
         boxList.forEach(box -> boxSentence(understand(box.src).get(0), box));
         List<String> list = boxList.stream().map(item -> item.src).toList();
         plmSrcBoxRepo.findAll().stream()
-                .filter(item -> !list.contains(item.src) && item.src.length() < 110)
+                .filter(item -> !list.contains(item.src) && item.src.length() < 100)
                 .forEach(item -> {
             var box = new PlmUnderstandBox();
             box.src = item.src;
@@ -223,7 +223,7 @@ public class PlmCore {
     public void reunderstand() {
         beforeUnderstandBox();
         understandBoxRepo.findAll().stream()
-                .filter(box -> box.src.length() < 110)
+                .filter(box -> box.src.length() < 100)
                 .forEach(box -> boxSentence(understand(box.src).get(0), box));
     }
 
