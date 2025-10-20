@@ -20,8 +20,9 @@ public class StaticUtil {
             Toke lastUnderstand = understandList.get(understandList.size() - 1);
             var sh = successHistory.get(src.getRight(), lastUnderstand.getN());
             if(sh != null) {
+                final var beforeMerge = understandList.subList(0, understandList.size() - sh.retryCnt());
                 sh.toBe().forEach(item -> {
-                    var merge = new ArrayList<>(understandList);
+                    var merge = new ArrayList<>(beforeMerge);
                     merge.addAll(item);
                     sentenceList.add(new Sentence(merge, contextList));
                 });
