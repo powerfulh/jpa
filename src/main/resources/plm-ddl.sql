@@ -109,3 +109,7 @@ create table plm_ultron_closer(
 	context int primary key,
 	foreign key(context) references plm_context(n)
 );
+create table plm_ultron_experienced_opener(
+	context int primary key,
+	foreign key(context) references plm_context(n)
+);
