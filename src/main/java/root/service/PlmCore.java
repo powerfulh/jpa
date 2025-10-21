@@ -156,7 +156,7 @@ public class PlmCore {
             logger.info("understanding with opener: {}", opener.getWord());
             List<Toke> understandList = new ArrayList<>();
             try {
-                StaticUtil.separateToken(understandList, understandTarget.pushToke(understandList, opener), wordList, failHistory, contextList, sentenceList, compoundList, successHistory, contextCore);
+                StaticUtil.separateToken(understandList, understandTarget.pushToke(understandList, opener), new Dict(wordList), failHistory, contextList, sentenceList, compoundList, successHistory, contextCore);
             } catch (PlmException plmException) {
                 e = plmException;
             }
