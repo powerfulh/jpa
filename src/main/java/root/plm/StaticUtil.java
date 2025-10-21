@@ -29,7 +29,8 @@ public class StaticUtil {
                 return;
             }
             var h = failHistory.get(src.getRight());
-            var sameList = wordList.src.stream()
+            final var page = wordList.book.get(src.getRight().charAt(0));
+            List<Toke> sameList = page == null ? List.of() : page.stream()
                     .map(item -> {
                         Toke toke = src.getAvailableToke(item);
                         if(toke == null || understandList.isEmpty()) return toke;
