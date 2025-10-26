@@ -37,7 +37,7 @@ public class StaticUtil {
                         } catch (PlmException e) {
                             return null;
                         }
-                        return contextCore.lengthRate(toke);
+                        return contextCore.step2(toke, lastUnderstand.isRightSpace());
                     })
                     .filter(item -> {
                         if(item != null) {

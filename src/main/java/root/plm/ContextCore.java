@@ -66,9 +66,12 @@ public class ContextCore {
                 .ifPresent(compound ->
                         rightContext(target, wordList.get(compound.getRightword()), right, contextList, compoundList, wordList, space, false, left.getWord().length()));
     }
-    public Toke lengthRate(Toke target) {
-        // 문맥이 없어 모든 분기가 탈락하고 마지막 놈만 잡히는 것을 방지하려고 최종적으로 후보의 길이가 긴 녀석을 고르도록 한다
-        if(target.rightContext == 0) target.rightContext = target.getWord().length() - 1;
+
+    public Toke step2(Toke target, boolean space) {
+        if(target.rightContext == 0) {
+            if (!space && suffix.contains(target.getN())) target.rightContext++;
+            else target.rightContext = target.getWord().length() - 1; // 끝까지 문맥이 없는 경우 길이가 긴 것이라도 고르게 하는 최종 조치
+        }
         return target;
     }
 }
