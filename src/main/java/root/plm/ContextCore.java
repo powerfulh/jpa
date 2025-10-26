@@ -4,9 +4,12 @@ import org.springframework.stereotype.Component;
 import root.plm.entity.Compound;
 import root.plm.entity.Context;
 import root.plm.entity.Word;
+import root.repo.plm.dsl.Repo;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Component
 public class ContextCore {
@@ -15,6 +18,14 @@ public class ContextCore {
     final String zeroType = "0";
     final String thingType = "무엇";
     final List<Integer> issue29except = List.of(2506, 105, 3876);
+
+    final Repo dsl;
+    final Set<Integer> suffix;
+
+    public ContextCore(Repo dsl) {
+        this.dsl = dsl;
+        suffix = new HashSet<>(dsl.selectSuffix());
+    }
 
     int contextPoint(List<Context> contextList, int left, int right, boolean space, List<Integer> history) {
         history.add(right);
