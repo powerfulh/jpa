@@ -234,7 +234,7 @@ public class PlmCore {
             context.sentence = usn;
             String currentTwo = sentence.get(i).getWord().concat(sentence.get(i).isRightSpace() ? " " : "").concat(sentence.get(i + 1).getWord());
             context.context = Optional.ofNullable(sentence.getContext(i, i + 1, contextList)).orElseThrow(() -> new PlmException("No context", currentTwo)).getN();
-            context.i = i;
+            context.i = i * 2; // 사이에 집어 넣을 일 있을까봐..
             ultronContextRepo.save(context);
         }
     }
