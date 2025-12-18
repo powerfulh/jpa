@@ -36,8 +36,10 @@ public class ContextCore {
      */
     void smartStartBoost(Word left, Word right, Toke target, boolean space, boolean otherOption, boolean leftBonus) {
         if(left.getType().equals(zeroType) && right.getType().equals(supportType) && !right.getN().equals(191)) target.rightContext--;
-        if(space && right.getType().equals(afterType)) target.rightContext--;
-        if(!space) {
+        if(space) {
+            if(right.getType().equals(afterType)) target.rightContext--;
+            if(left.getType().equals(afterType) && right.getType().equals(supportType)) target.rightContext--;
+        } else {
             if(left.getType().equals(afterType) && (right.getType().equals(supportType) || right.getType().equals(zeroType)) && !issue29except.contains(right.getN()) && otherOption) throw new PlmException("Maybe wrong", left.getWord() + "+" + target.getWord());
             if(left.getType().equals(afterType) && right.getType().equals(thingType)) target.rightContext--;
             final boolean leftWrapA = left.getType().equals(thingType) || left.getType().equals("대명사");
