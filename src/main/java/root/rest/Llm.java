@@ -2,8 +2,10 @@ package root.rest;
 
 import org.springframework.web.bind.annotation.*;
 import root.entity.plm.LlmWord;
+import root.entity.plm.PlmUnderstandBox;
 import root.plm.Sentence;
 import root.repo.plm.LlmWordRepo;
+import root.repo.plm.dsl.Repo;
 import root.service.PlmCore;
 
 import java.util.List;
@@ -14,10 +16,12 @@ import java.util.Map;
 public class Llm {
     final LlmWordRepo llmWordRepo;
     final PlmCore plmCore;
+    final Repo dsl;
 
-    public Llm(LlmWordRepo llmWordRepo, PlmCore plmCore) {
+    public Llm(LlmWordRepo llmWordRepo, PlmCore plmCore, Repo dsl) {
         this.llmWordRepo = llmWordRepo;
         this.plmCore = plmCore;
+        this.dsl = dsl;
     }
 
     @GetMapping("/{w}")
@@ -51,5 +55,9 @@ public class Llm {
     @PostMapping("/commit")
     public void commit(String src, boolean learnContext) {
         plmCore.understandThenCommit(src, learnContext);
+    }
+    @GetMapping("/unreadable")
+    public List<PlmUnderstandBox> getUnreadable() {
+        return dsl.selectUnreadable();
     }
 }
