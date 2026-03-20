@@ -24,10 +24,6 @@ public class Cont {
         this.levenshtein = levenshtein;
     }
 
-    @GetMapping("/med")
-    public List<Medicine> getMedicine() {
-        return medicineRepo.findAll();
-    }
     @PostMapping
     public void saveMedicine(@RequestBody @Valid Medicine dto) {
         medicineRepo.save(dto);
