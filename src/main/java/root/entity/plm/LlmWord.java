@@ -22,6 +22,12 @@ public class LlmWord implements Word {
         return r;
     }
 
+    public static LlmWord toWithMemo(LlmWord from) {
+        var r = to(from);
+        r.memo = from.memo;
+        return r;
+    }
+
     public Integer getN() {
         return n;
     }

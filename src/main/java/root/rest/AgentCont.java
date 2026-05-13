@@ -16,7 +16,7 @@ public class AgentCont {
     }
 
     public record TaskReq(String word, String request, String response) {}
-    public record WordReq(int taskId, String word, String type) {}
+    public record WordReq(int taskId, String word, String type, String memo) {}
     public record CompoundReq(int taskId, int word, int leftword, int rightword) {}
     public record ContextReq(int taskId, int leftword, int rightword, String kind) {}
     public record CommitReq(int taskId, String src, boolean learnContext) {}
@@ -29,7 +29,7 @@ public class AgentCont {
 
     @PostMapping("/word")
     public Map<String, Integer> addWord(@RequestBody WordReq req) {
-        return Map.of("n", core.addWord(req.taskId(), req.word(), req.type()));
+        return Map.of("n", core.addWord(req.taskId(), req.word(), req.type(), req.memo()));
     }
 
     @PostMapping("/compound")

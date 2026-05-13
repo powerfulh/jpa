@@ -81,11 +81,11 @@ public class AgentCore {
     }
 
     @Transactional
-    public Integer addWord(int taskId, String word, String type) {
+    public Integer addWord(int taskId, String word, String type, String memo) {
         requireTask(taskId);
         AgentLearnWord w = new AgentLearnWord();
-        w.set(word, type);
-        LlmWord saved = llmWordRepo.save(LlmWord.to(w));
+        w.set(word, type, memo);
+        LlmWord saved = llmWordRepo.save(LlmWord.toWithMemo(w));
         changeRepo.save(new AgentChange(taskId, AgentChange.WORD, saved.getN(), null));
         return saved.getN();
     }
@@ -288,8 +288,9 @@ public class AgentCore {
 }
 
 class AgentLearnWord extends LlmWord {
-    void set(String w, String t) {
+    void set(String w, String t, String m) {
         word = w;
         type = t;
+        memo = m;
     }
 }
