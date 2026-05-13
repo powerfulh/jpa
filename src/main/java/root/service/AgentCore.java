@@ -27,6 +27,7 @@ import root.repo.plm.PlmUltronSentenceRepo;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -50,6 +51,7 @@ public class AgentCore {
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             .enable(SerializationFeature.INDENT_OUTPUT);
     final File logFile = new File("agent-log/rollback.json");
+    final DateTimeFormatter logTimeFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public AgentCore(AgentTaskRepo taskRepo, AgentChangeRepo changeRepo, LlmWordRepo llmWordRepo,
                      LlmWordCompoundRepo compoundRepo, PlmContextRepo contextRepo,
@@ -209,7 +211,7 @@ public class AgentCore {
         jdbc.update("DELETE FROM " + table + " WHERE " + whereSql, args);
 
         Map<String, Object> entry = new LinkedHashMap<>();
-        entry.put("at", LocalDateTime.now().toString());
+        entry.put("at", LocalDateTime.now().format(logTimeFmt));
         entry.put("task", taskId);
         entry.put("agentChangeN", change.n);
         entry.put("op", change.op);
