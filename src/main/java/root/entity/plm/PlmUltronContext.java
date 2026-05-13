@@ -13,4 +13,8 @@ public class PlmUltronContext {
     public int sentence;
     public int context;
     public int i;
+
+    public Integer getN() {
+        return n;
+    }
 }
