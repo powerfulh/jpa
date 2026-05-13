@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 @Entity
 public class AgentChange {
     public static final String WORD = "WORD";
+    public static final String WORD_TYPE = "WORD_TYPE";
+    public static final String WORD_MEMO = "WORD_MEMO";
     public static final String COMPOUND = "COMPOUND";
     public static final String CONTEXT = "CONTEXT";
     public static final String CONTEXT_CNT = "CONTEXT_CNT";
@@ -28,6 +30,7 @@ public class AgentChange {
     @Column(name = "entity_n")
     public Integer entityN;
     public Integer prev;
+    public String prevString;
     @CreationTimestamp
     public LocalDateTime createdAt;
 

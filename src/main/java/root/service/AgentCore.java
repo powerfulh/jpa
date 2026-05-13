@@ -91,6 +91,25 @@ public class AgentCore {
     }
 
     @Transactional
+    public void updateWord(int taskId, int n, String type, String memo) {
+        requireTask(taskId);
+        LlmWord w = llmWordRepo.findById(n)
+                .orElseThrow(() -> new PlmException("No word", String.valueOf(n)));
+        if (type != null && !type.equals(w.getType())) {
+            AgentChange c = new AgentChange(taskId, AgentChange.WORD_TYPE, n, null);
+            c.prevString = w.getType();
+            changeRepo.save(c);
+            w.setType(type);
+        }
+        if (memo != null && !memo.equals(w.getMemo())) {
+            AgentChange c = new AgentChange(taskId, AgentChange.WORD_MEMO, n, null);
+            c.prevString = w.getMemo();
+            changeRepo.save(c);
+            w.setMemo(memo);
+        }
+    }
+
+    @Transactional
     public Integer addCompound(int taskId, int word, int leftword, int rightword) {
         requireTask(taskId);
         LlmWordCompound saved = compoundRepo.save(new LlmWordCompound(word, leftword, rightword));
@@ -117,7 +136,6 @@ public class AgentCore {
         } else {
             if ("cnt".equals(kind)) existing.cnt++;
             else existing.space++;
-            contextRepo.save(existing);
             changeRepo.save(new AgentChange(taskId,
                     "cnt".equals(kind) ? AgentChange.CONTEXT_CNT : AgentChange.CONTEXT_SPACE,
                     existing.getN(), null));
@@ -184,7 +202,6 @@ public class AgentCore {
             throw new PlmException("No request sentence", String.valueOf(requestSentenceN));
         Integer prev = response.target;
         response.target = requestSentenceN;
-        sentenceRepo.save(response);
         changeRepo.save(new AgentChange(taskId, AgentChange.QA, responseSentenceN, prev));
     }
 
@@ -255,26 +272,23 @@ public class AgentCore {
                     cleanupExternal(taskId, c, "plm_ultron_experienced_opener", "context = ?", c.entityN);
                     contextRepo.deleteById(c.entityN);
                 }
-                case AgentChange.CONTEXT_CNT -> {
-                    PlmContext ctx = contextRepo.findById(c.entityN)
-                            .orElseThrow(() -> new PlmException("Missing context for rollback", String.valueOf(c.entityN)));
-                    ctx.cnt--;
-                    contextRepo.save(ctx);
-                }
-                case AgentChange.CONTEXT_SPACE -> {
-                    PlmContext ctx = contextRepo.findById(c.entityN)
-                            .orElseThrow(() -> new PlmException("Missing context for rollback", String.valueOf(c.entityN)));
-                    ctx.space--;
-                    contextRepo.save(ctx);
-                }
+                case AgentChange.CONTEXT_CNT -> contextRepo.findById(c.entityN)
+                        .orElseThrow(() -> new PlmException("Missing context for rollback", String.valueOf(c.entityN)))
+                        .cnt--;
+                case AgentChange.CONTEXT_SPACE -> contextRepo.findById(c.entityN)
+                        .orElseThrow(() -> new PlmException("Missing context for rollback", String.valueOf(c.entityN)))
+                        .space--;
+                case AgentChange.WORD_TYPE -> llmWordRepo.findById(c.entityN)
+                        .orElseThrow(() -> new PlmException("Missing word for type rollback", String.valueOf(c.entityN)))
+                        .setType(c.prevString);
+                case AgentChange.WORD_MEMO -> llmWordRepo.findById(c.entityN)
+                        .orElseThrow(() -> new PlmException("Missing word for memo rollback", String.valueOf(c.entityN)))
+                        .setMemo(c.prevString);
                 case AgentChange.ULTRON_SENTENCE -> sentenceRepo.deleteById(c.entityN);
                 case AgentChange.ULTRON_CONTEXT -> ultronContextRepo.deleteById(c.entityN);
-                case AgentChange.QA -> {
-                    PlmUltronSentence us = sentenceRepo.findById(c.entityN)
-                            .orElseThrow(() -> new PlmException("Missing sentence for QA rollback", String.valueOf(c.entityN)));
-                    us.target = c.prev;
-                    sentenceRepo.save(us);
-                }
+                case AgentChange.QA -> sentenceRepo.findById(c.entityN)
+                        .orElseThrow(() -> new PlmException("Missing sentence for QA rollback", String.valueOf(c.entityN)))
+                        .target = c.prev;
                 default -> throw new PlmException("Unknown op", c.op);
             }
         }

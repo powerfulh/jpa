@@ -43,4 +43,13 @@ public class LlmWord implements Word {
     public String getMemo() {
         return memo;
     }
+
+    // 아래는 에이전트 용
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public void setMemo(String memo) {
+        this.memo = memo;
+    }
 }
