@@ -1,6 +1,10 @@
 package root.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.transaction.Transactional;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import root.entity.agent.AgentChange;
@@ -20,7 +24,13 @@ import root.repo.plm.PlmContextRepo;
 import root.repo.plm.PlmUltronContextRepo;
 import root.repo.plm.PlmUltronSentenceRepo;
 
+import java.io.File;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class AgentCore {
@@ -32,12 +42,19 @@ public class AgentCore {
     final PlmUltronSentenceRepo sentenceRepo;
     final PlmUltronContextRepo ultronContextRepo;
     final PlmCore plmCore;
+    final JdbcTemplate jdbc;
 
     final RestClient model = RestClient.create();
+    final ObjectMapper json = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .enable(SerializationFeature.INDENT_OUTPUT);
+    final File logFile = new File("agent-log/rollback.json");
 
     public AgentCore(AgentTaskRepo taskRepo, AgentChangeRepo changeRepo, LlmWordRepo llmWordRepo,
                      LlmWordCompoundRepo compoundRepo, PlmContextRepo contextRepo,
-                     PlmUltronSentenceRepo sentenceRepo, PlmUltronContextRepo ultronContextRepo, PlmCore plmCore) {
+                     PlmUltronSentenceRepo sentenceRepo, PlmUltronContextRepo ultronContextRepo,
+                     PlmCore plmCore, JdbcTemplate jdbc) {
         this.taskRepo = taskRepo;
         this.changeRepo = changeRepo;
         this.llmWordRepo = llmWordRepo;
@@ -46,6 +63,7 @@ public class AgentCore {
         this.sentenceRepo = sentenceRepo;
         this.ultronContextRepo = ultronContextRepo;
         this.plmCore = plmCore;
+        this.jdbc = jdbc;
     }
 
     void requireTask(int taskId) {
@@ -183,14 +201,58 @@ public class AgentCore {
         taskRepo.deleteById(taskId);
     }
 
+    /** SELECT → DELETE → 로그 append. 우리 소유 아닌 외부 테이블 전용. */
+    void cleanupExternal(int taskId, AgentChange change, String table, String whereSql, Object... args) {
+        String select = "SELECT * FROM " + table + " WHERE " + whereSql;
+        List<Map<String, Object>> rows = jdbc.queryForList(select, args);
+        if (rows.isEmpty()) return;
+        jdbc.update("DELETE FROM " + table + " WHERE " + whereSql, args);
+
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("at", LocalDateTime.now().toString());
+        entry.put("task", taskId);
+        entry.put("agentChangeN", change.n);
+        entry.put("op", change.op);
+        entry.put("entityN", change.entityN);
+        entry.put("table", table);
+        entry.put("rows", rows);
+        appendLog(entry);
+    }
+
+    void appendLog(Map<String, Object> entry) {
+        try {
+            File dir = logFile.getParentFile();
+            if (dir != null && !dir.exists() && !dir.mkdirs())
+                throw new PlmException("Failed to create log dir", dir.getPath());
+            List<Object> log;
+            if (logFile.exists() && logFile.length() > 0) {
+                log = json.readValue(logFile, json.getTypeFactory().constructCollectionType(List.class, Object.class));
+            } else {
+                log = new ArrayList<>();
+            }
+            log.add(entry);
+            json.writeValue(logFile, log);
+        } catch (IOException e) {
+            throw new PlmException("Failed to write rollback log", e.getMessage());
+        }
+    }
+
     @Transactional
     public void rollback(int taskId) {
         requireTask(taskId);
         for (AgentChange c : changeRepo.findByTaskOrderByNDesc(taskId)) {
             switch (c.op) {
-                case AgentChange.WORD -> llmWordRepo.deleteById(c.entityN);
+                case AgentChange.WORD -> {
+                    cleanupExternal(taskId, c, "ultron_parameter", "word = ?", c.entityN);
+                    llmWordRepo.deleteById(c.entityN);
+                }
                 case AgentChange.COMPOUND -> compoundRepo.deleteById(c.entityN);
-                case AgentChange.CONTEXT -> contextRepo.deleteById(c.entityN);
+                case AgentChange.CONTEXT -> {
+                    cleanupExternal(taskId, c, "plm_ultron_closer", "context = ?", c.entityN);
+                    cleanupExternal(taskId, c, "plm_ultron_triplet", "`lead` = ? OR context = ?", c.entityN, c.entityN);
+                    cleanupExternal(taskId, c, "plm_ultron_experienced_opener", "context = ?", c.entityN);
+                    contextRepo.deleteById(c.entityN);
+                }
                 case AgentChange.CONTEXT_CNT -> {
                     PlmContext ctx = contextRepo.findById(c.entityN)
                             .orElseThrow(() -> new PlmException("Missing context for rollback", String.valueOf(c.entityN)));
