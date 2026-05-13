@@ -1,12 +1,9 @@
 package root.rest;
 
 import org.springframework.web.bind.annotation.*;
-import root.entity.agent.AgentChange;
 import root.entity.agent.AgentTask;
 import root.service.AgentCore;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -53,29 +50,6 @@ public class AgentCont {
     @PostMapping("/qa")
     public void linkQa(@RequestBody QaReq req) {
         core.linkQa(req.taskId(), req.requestSentenceN(), req.responseSentenceN());
-    }
-
-    @GetMapping("/task")
-    public List<AgentTask> listTasks() {
-        return core.listTasks();
-    }
-
-    @GetMapping("/task/{n}")
-    public Map<String, Object> taskDetail(@PathVariable int n) {
-        Map<String, Object> r = new HashMap<>();
-        r.put("task", core.listTasks().stream().filter(t -> t.n == n).findFirst().orElse(null));
-        r.put("changes", core.listChanges(n));
-        return r;
-    }
-
-    @PostMapping("/task/{n}/confirm")
-    public void confirm(@PathVariable int n) {
-        core.confirm(n);
-    }
-
-    @PostMapping("/task/{n}/rollback")
-    public void rollback(@PathVariable int n) {
-        core.rollback(n);
     }
 
     @PostMapping("/reload")
