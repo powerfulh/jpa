@@ -1,13 +1,16 @@
 package root.rest;
 
 import org.springframework.web.bind.annotation.*;
+import root.entity.agent.AgentTask;
 import root.entity.plm.LlmWord;
 import root.entity.plm.PlmUnderstandBox;
 import root.plm.Sentence;
 import root.repo.plm.LlmWordRepo;
 import root.repo.plm.dsl.Repo;
+import root.service.AgentCore;
 import root.service.PlmCore;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,11 +19,13 @@ import java.util.Map;
 public class Llm {
     final LlmWordRepo llmWordRepo;
     final PlmCore plmCore;
+    final AgentCore agentCore;
     final Repo dsl;
 
-    public Llm(LlmWordRepo llmWordRepo, PlmCore plmCore, Repo dsl) {
+    public Llm(LlmWordRepo llmWordRepo, PlmCore plmCore, AgentCore agentCore, Repo dsl) {
         this.llmWordRepo = llmWordRepo;
         this.plmCore = plmCore;
+        this.agentCore = agentCore;
         this.dsl = dsl;
     }
 
@@ -59,5 +64,25 @@ public class Llm {
     @GetMapping("/unreadable")
     public List<PlmUnderstandBox> getUnreadable() {
         return dsl.selectUnreadable();
+    }
+
+    @GetMapping("/agent/task")
+    public List<AgentTask> listAgentTasks() {
+        return agentCore.listTasks();
+    }
+    @GetMapping("/agent/task/{n}")
+    public Map<String, Object> agentTaskDetail(@PathVariable int n) {
+        Map<String, Object> r = new HashMap<>();
+        r.put("task", agentCore.listTasks().stream().filter(t -> t.n == n).findFirst().orElse(null));
+        r.put("changes", agentCore.listChanges(n));
+        return r;
+    }
+    @PostMapping("/agent/task/{n}/confirm")
+    public void confirmAgentTask(@PathVariable int n) {
+        agentCore.confirm(n);
+    }
+    @PostMapping("/agent/task/{n}/rollback")
+    public void rollbackAgentTask(@PathVariable int n) {
+        agentCore.rollback(n);
     }
 }

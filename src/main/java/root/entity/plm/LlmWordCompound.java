@@ -15,6 +15,18 @@ public class LlmWordCompound implements Compound {
     int rightword;
     int leftword;
 
+    public LlmWordCompound() {}
+
+    public LlmWordCompound(int word, int leftword, int rightword) {
+        this.word = word;
+        this.leftword = leftword;
+        this.rightword = rightword;
+    }
+
+    public Integer getN() {
+        return n;
+    }
+
     public int getRightword() {
         return rightword;
     }
