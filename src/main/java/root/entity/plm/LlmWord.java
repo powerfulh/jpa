@@ -4,7 +4,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import org.hibernate.annotations.UpdateTimestamp;
 import root.plm.entity.Word;
+
+import java.time.LocalDateTime;
 
 @Entity
 public class LlmWord implements Word {
@@ -14,6 +17,8 @@ public class LlmWord implements Word {
     protected String word;
     protected String type;
     protected String memo;
+    @UpdateTimestamp
+    LocalDateTime updatedDate;
 
     public static LlmWord to(LlmWord from) {
         var r = new LlmWord();
