@@ -10,7 +10,10 @@ public class PlmUltronSentence {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Integer n;
-    public final int opener;
+    public int opener;
+    public Integer target;
+
+    public PlmUltronSentence() {}
 
     public PlmUltronSentence(int word) {
         opener = word;
