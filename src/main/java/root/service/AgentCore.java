@@ -131,7 +131,9 @@ public class AgentCore {
             if ("cnt".equals(kind)) c.cnt = 1;
             else c.space = 1;
             PlmContext saved = contextRepo.save(c);
-            changeRepo.save(new AgentChange(taskId, AgentChange.CONTEXT, saved.getN(), null));
+            changeRepo.save(new AgentChange(taskId,
+                    "cnt".equals(kind) ? AgentChange.CONTEXT_NEW_CNT : AgentChange.CONTEXT_NEW_SPACE,
+                    saved.getN(), null));
             return saved.getN();
         } else {
             if ("cnt".equals(kind)) existing.cnt++;
@@ -153,6 +155,7 @@ public class AgentCore {
             for (int i = 0; i < sentence.size() - 1; i++) {
                 PlmContext ctx = sentence.getContext(i, i + 1, contextList);
                 boolean space = sentence.get(i).isRightSpace();
+                AgentChange c;
                 if (ctx == null) {
                     ctx = new PlmContext();
                     ctx.leftword = sentence.get(i).getN();
@@ -160,15 +163,19 @@ public class AgentCore {
                     if (space) ctx.space = 1;
                     else ctx.cnt = 1;
                     ctx = contextRepo.save(ctx);
-                    changeRepo.save(new AgentChange(taskId, AgentChange.CONTEXT, ctx.getN(), null));
+                    c = new AgentChange(taskId,
+                            space ? AgentChange.CONTEXT_NEW_SPACE : AgentChange.CONTEXT_NEW_CNT,
+                            ctx.getN(), null);
                     contextList.add(ctx);
                 } else {
                     if (space) ctx.space++;
                     else ctx.cnt++;
-                    changeRepo.save(new AgentChange(taskId,
+                    c = new AgentChange(taskId,
                             space ? AgentChange.CONTEXT_SPACE : AgentChange.CONTEXT_CNT,
-                            ctx.getN(), null));
+                            ctx.getN(), null);
                 }
+                c.viaCommit = true;
+                changeRepo.save(c);
             }
         }
 
@@ -266,7 +273,7 @@ public class AgentCore {
                     llmWordRepo.deleteById(c.entityN);
                 }
                 case AgentChange.COMPOUND -> compoundRepo.deleteById(c.entityN);
-                case AgentChange.CONTEXT -> {
+                case AgentChange.CONTEXT_NEW_CNT, AgentChange.CONTEXT_NEW_SPACE -> {
                     cleanupExternal(taskId, c, "plm_ultron_closer", "context = ?", c.entityN);
                     cleanupExternal(taskId, c, "plm_ultron_triplet", "`lead` = ? OR context = ?", c.entityN, c.entityN);
                     cleanupExternal(taskId, c, "plm_ultron_experienced_opener", "context = ?", c.entityN);
