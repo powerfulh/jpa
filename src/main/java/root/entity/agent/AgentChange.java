@@ -15,7 +15,8 @@ public class AgentChange {
     public static final String WORD_TYPE = "WORD_TYPE";
     public static final String WORD_MEMO = "WORD_MEMO";
     public static final String COMPOUND = "COMPOUND";
-    public static final String CONTEXT = "CONTEXT";
+    public static final String CONTEXT_NEW_CNT = "CONTEXT_NEW_CNT";
+    public static final String CONTEXT_NEW_SPACE = "CONTEXT_NEW_SPACE";
     public static final String CONTEXT_CNT = "CONTEXT_CNT";
     public static final String CONTEXT_SPACE = "CONTEXT_SPACE";
     public static final String ULTRON_SENTENCE = "ULTRON_SENTENCE";
@@ -31,6 +32,7 @@ public class AgentChange {
     public Integer entityN;
     public Integer prev;
     public String prevString;
+    public boolean viaCommit;
     @CreationTimestamp
     public LocalDateTime createdAt;
 
