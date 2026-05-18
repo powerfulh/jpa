@@ -32,7 +32,7 @@ public class AgentChange {
     public Integer entityN;
     public Integer prev;
     public String prevString;
-    public boolean viaCommit;
+    public Boolean viaCommit;
     @CreationTimestamp
     public LocalDateTime createdAt;
 
