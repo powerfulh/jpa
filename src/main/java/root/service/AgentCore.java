@@ -124,23 +124,28 @@ public class AgentCore {
             throw new PlmException("Invalid kind (cnt|space)", kind);
 
         PlmContext existing = contextRepo.findByLeftwordAndRightword(leftword, rightword).orElse(null);
+        AgentChange c;
         if (existing == null) {
-            PlmContext c = new PlmContext();
-            c.leftword = leftword;
-            c.rightword = rightword;
-            if ("cnt".equals(kind)) c.cnt = 1;
-            else c.space = 1;
-            PlmContext saved = contextRepo.save(c);
-            changeRepo.save(new AgentChange(taskId,
+            PlmContext nc = new PlmContext();
+            nc.leftword = leftword;
+            nc.rightword = rightword;
+            if ("cnt".equals(kind)) nc.cnt = 1;
+            else nc.space = 1;
+            PlmContext saved = contextRepo.save(nc);
+            c = new AgentChange(taskId,
                     "cnt".equals(kind) ? AgentChange.CONTEXT_NEW_CNT : AgentChange.CONTEXT_NEW_SPACE,
-                    saved.getN(), null));
+                    saved.getN(), null);
+            c.viaCommit = false;
+            changeRepo.save(c);
             return saved.getN();
         } else {
             if ("cnt".equals(kind)) existing.cnt++;
             else existing.space++;
-            changeRepo.save(new AgentChange(taskId,
+            c = new AgentChange(taskId,
                     "cnt".equals(kind) ? AgentChange.CONTEXT_CNT : AgentChange.CONTEXT_SPACE,
-                    existing.getN(), null));
+                    existing.getN(), null);
+            c.viaCommit = false;
+            changeRepo.save(c);
             return existing.getN();
         }
     }
