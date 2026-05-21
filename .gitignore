@@ -2,3 +2,4 @@
 /target/
 /powerful-jpa.iml
 /agent-log/
+/.claude/settings.local.json
