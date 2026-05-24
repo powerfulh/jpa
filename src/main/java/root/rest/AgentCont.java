@@ -15,7 +15,7 @@ public class AgentCont {
         this.core = core;
     }
 
-    public record TaskReq(String word, String request, String response) {}
+    public record TaskReq(Integer word, String request, String response) {}
     public record WordReq(int taskId, String word, String type, String memo) {}
     public record WordUpdateReq(int taskId, int n, String type, String memo) {}
     public record CompoundReq(int taskId, int word, int leftword, int rightword) {}

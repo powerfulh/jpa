@@ -72,7 +72,7 @@ public class AgentCore {
         if (!taskRepo.existsById(taskId)) throw new PlmException("No agent task", String.valueOf(taskId));
     }
 
-    public AgentTask createTask(String word, String request, String response) {
+    public AgentTask createTask(Integer word, String request, String response) {
         AgentTask t = new AgentTask();
         t.word = word;
         t.request = request;

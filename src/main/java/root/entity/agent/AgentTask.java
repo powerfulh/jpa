@@ -13,7 +13,7 @@ public class AgentTask {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Integer n;
-    public String word;
+    public Integer word;
     public String request;
     public String response;
     @CreationTimestamp

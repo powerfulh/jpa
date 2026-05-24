@@ -105,6 +105,13 @@
         .token .n { color: var(--accent); font-size: 11px; }
         .token .meta { color: var(--muted); font-size: 11px; }
 
+        .token.highlight {
+          background: var(--accent);
+        }
+        .token.highlight .w { color: #fff; }
+        .token.highlight .n { color: #fff; }
+        .token.highlight .meta { color: rgba(255,255,255,0.85); }
+
         .actions {
           display: flex;
           gap: 8px;
@@ -178,7 +185,7 @@ function renderCard(t) {
     return card
 }
 
-async function fillUnderstand(card, slot, src) {
+async function fillUnderstand(card, slot, src, wordN) {
     const target = card.querySelector(`[data-slot="${slot}"]`)
     try {
         const res = await fetch('/llm/understand?src=' + encodeURIComponent(src))
@@ -187,7 +194,7 @@ async function fillUnderstand(card, slot, src) {
         if (!list.length) { target.innerHTML = '<span class="empty">분해 후보 없음</span>'; return }
         const tokens = list[0].list
         target.innerHTML = tokens.map(tk => `
-            <span class="token">
+            <span class="token${tk.n === wordN ? ' highlight' : ''}">
                 <span class="w">${esc(tk.word)}</span>
                 <span class="n">${tk.n}</span>
                 <span class="meta">${esc(tk.type)}${tk.memo ? '·' + esc(tk.memo) : ''}</span>
@@ -231,8 +238,8 @@ async function load() {
         for (const t of tasks) {
             const card = renderCard(t)
             list.appendChild(card)
-            fillUnderstand(card, 'req', t.request)
-            fillUnderstand(card, 'res', t.response)
+            fillUnderstand(card, 'req', t.request, t.word)
+            fillUnderstand(card, 'res', t.response, t.word)
         }
     } catch (e) {
         list.innerHTML = `<div class="empty">에러: ${esc(e.message)}</div>`
