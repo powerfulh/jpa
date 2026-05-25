@@ -73,6 +73,9 @@ public class AgentCore {
     }
 
     public AgentTask createTask(Integer word, String request, String response) {
+        if (taskRepo.existsByWord(word)) {
+            throw new PlmException("이미 해당 단어로 타스크 생성됨, 재정의 불가", String.valueOf(word));
+        }
         AgentTask t = new AgentTask();
         t.word = word;
         t.request = request;
