@@ -20,7 +20,7 @@ public class AgentCont {
     public record WordUpdateReq(int taskId, int n, String type, String memo) {}
     public record CompoundReq(int taskId, int word, int leftword, int rightword) {}
     public record ContextReq(int taskId, int leftword, int rightword, String kind) {}
-    public record CommitReq(int taskId, String src, boolean learnContext) {}
+    public record CommitReq(int taskId, String which, boolean learnContext) {}
     public record QaReq(int taskId, int requestSentenceN, int responseSentenceN) {}
 
     @PostMapping("/task")
@@ -50,7 +50,7 @@ public class AgentCont {
 
     @PostMapping("/commit")
     public Map<String, Integer> commit(@RequestBody CommitReq req) {
-        return Map.of("n", core.commit(req.taskId(), req.src(), req.learnContext()));
+        return Map.of("n", core.commit(req.taskId(), req.which(), req.learnContext()));
     }
 
     @PostMapping("/qa")

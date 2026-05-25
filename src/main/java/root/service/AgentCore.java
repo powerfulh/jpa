@@ -151,8 +151,13 @@ public class AgentCore {
     }
 
     @Transactional
-    public Integer commit(int taskId, String src, boolean learnContext) {
-        requireTask(taskId);
+    public Integer commit(int taskId, String which, boolean learnContext) {
+        AgentTask task = taskRepo.findById(taskId)
+                .orElseThrow(() -> new PlmException("No agent task", String.valueOf(taskId)));
+        String src;
+        if ("request".equals(which)) src = task.request;
+        else if ("response".equals(which)) src = task.response;
+        else throw new PlmException("Invalid which (request|response)", which);
         Sentence sentence = plmCore.understand(src).get(0);
 
         if (learnContext) {
