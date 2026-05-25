@@ -72,7 +72,10 @@ public class AgentCore {
         if (!taskRepo.existsById(taskId)) throw new PlmException("No agent task", String.valueOf(taskId));
     }
 
-    public AgentTask createTask(String word, String request, String response) {
+    public AgentTask createTask(Integer word, String request, String response) {
+        if (taskRepo.existsByWord(word)) {
+            throw new PlmException("이미 해당 단어로 타스크 생성됨, 재정의 불가", String.valueOf(word));
+        }
         AgentTask t = new AgentTask();
         t.word = word;
         t.request = request;
@@ -151,8 +154,13 @@ public class AgentCore {
     }
 
     @Transactional
-    public Integer commit(int taskId, String src, boolean learnContext) {
-        requireTask(taskId);
+    public Integer commit(int taskId, String which, boolean learnContext) {
+        AgentTask task = taskRepo.findById(taskId)
+                .orElseThrow(() -> new PlmException("No agent task", String.valueOf(taskId)));
+        String src;
+        if ("request".equals(which)) src = task.request;
+        else if ("response".equals(which)) src = task.response;
+        else throw new PlmException("Invalid which (request|response)", which);
         Sentence sentence = plmCore.understand(src).get(0);
 
         if (learnContext) {
