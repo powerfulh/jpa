@@ -6,7 +6,7 @@ c.op, c.entity_n, ifnull(c.via_commit, c.prev_string) via, ct.leftword, ct.right
 from agent_change c
 left join plm_context ct on c.via_commit is not null and c.entity_n = ct.n
 where c.task = (select min(t.n) from agent_task t)
-order by c.via_commit is null, c.entity_n
+order by c.via_commit is null, c.n
 ;
 select * from llm_word w
 order by w.updated_date desc
