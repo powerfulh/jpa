@@ -44,8 +44,8 @@ public class AgentCont {
     }
 
     @PostMapping("/context")
-    public Map<String, Integer> adjustContext(@RequestBody ContextReq req) {
-        return Map.of("n", core.adjustContext(req.taskId(), req.leftword(), req.rightword(), req.kind()));
+    public Map<String, Object> adjustContext(@RequestBody ContextReq req) {
+        return core.adjustContext(req.taskId(), req.leftword(), req.rightword(), req.kind());
     }
 
     @PostMapping("/commit")

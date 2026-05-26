@@ -121,12 +121,57 @@ public class AgentCore {
     }
 
     @Transactional
-    public Integer adjustContext(int taskId, int leftword, int rightword, String kind) {
+    public Map<String, Object> adjustContext(int taskId, int leftword, int rightword, String kind) {
         requireTask(taskId);
         if (!"cnt".equals(kind) && !"space".equals(kind))
             throw new PlmException("Invalid kind (cnt|space)", kind);
 
-        PlmContext existing = contextRepo.findByLeftwordAndRightword(leftword, rightword).orElse(null);
+        LlmWordCompound leftComp = compoundRepo.findByWord(leftword).orElse(null);
+        LlmWordCompound rightComp = compoundRepo.findByWord(rightword).orElse(null);
+
+        // 시도 단계: (left, right, label)
+        List<int[]> pairs = new ArrayList<>();
+        List<String> labels = new ArrayList<>();
+        if (leftComp != null && rightComp != null) {
+            pairs.add(new int[]{leftComp.getRightword(), rightComp.getLeftword()});
+            labels.add("both_constituent");
+            pairs.add(new int[]{leftComp.getRightword(), rightword});
+            labels.add("left_constituent");
+            pairs.add(new int[]{leftword, rightComp.getLeftword()});
+            labels.add("right_constituent");
+        } else if (leftComp != null) {
+            pairs.add(new int[]{leftComp.getRightword(), rightword});
+            labels.add("left_constituent");
+        } else if (rightComp != null) {
+            pairs.add(new int[]{leftword, rightComp.getLeftword()});
+            labels.add("right_constituent");
+        }
+        pairs.add(new int[]{leftword, rightword});
+        labels.add("direct");
+
+        // 단계 진행: 현재 단계 ctx 가 충분 (kind 값 ≥ 1) 하면 다음 단계, 아니면 현재 단계에서 추가
+        for (int i = 0; i < pairs.size(); i++) {
+            int[] pair = pairs.get(i);
+            boolean isLast = (i == pairs.size() - 1);
+            PlmContext existing = contextRepo.findByLeftwordAndRightword(pair[0], pair[1]).orElse(null);
+            int currentKindVal = 0;
+            if (existing != null) {
+                currentKindVal = "cnt".equals(kind) ? existing.cnt : existing.space;
+            }
+            if (isLast || currentKindVal < 1) {
+                int savedN = applyContext(taskId, pair[0], pair[1], kind, existing);
+                Map<String, Object> result = new LinkedHashMap<>();
+                result.put("n", savedN);
+                result.put("applied", labels.get(i));
+                result.put("leftword", pair[0]);
+                result.put("rightword", pair[1]);
+                return result;
+            }
+        }
+        throw new PlmException("Unreachable adjustContext", "");
+    }
+
+    private int applyContext(int taskId, int leftword, int rightword, String kind, PlmContext existing) {
         AgentChange c;
         if (existing == null) {
             PlmContext nc = new PlmContext();

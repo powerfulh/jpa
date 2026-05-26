@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface LlmWordCompoundRepo extends JpaRepository<LlmWordCompound, Integer> {
     List<LlmWordCompound> findByRightword(int n);
+    java.util.Optional<LlmWordCompound> findByWord(int n);
 }
