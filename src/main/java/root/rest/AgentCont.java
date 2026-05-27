@@ -15,7 +15,7 @@ public class AgentCont {
         this.core = core;
     }
 
-    public record TaskReq(Integer word, String request, String response) {}
+    public record TaskReq(Integer word, String request, String response, String prePrompt) {}
     public record WordReq(int taskId, String word, String type, String memo) {}
     public record WordUpdateReq(int taskId, int n, String type, String memo) {}
     public record CompoundReq(int taskId, int word, int leftword, int rightword) {}
@@ -25,7 +25,7 @@ public class AgentCont {
 
     @PostMapping("/task")
     public AgentTask createTask(@RequestBody TaskReq req) {
-        return core.createTask(req.word(), req.request(), req.response());
+        return core.createTask(req.word(), req.request(), req.response(), req.prePrompt());
     }
 
     @PostMapping("/word")

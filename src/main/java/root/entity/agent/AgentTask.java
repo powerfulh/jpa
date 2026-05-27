@@ -16,6 +16,7 @@ public class AgentTask {
     public Integer word;
     public String request;
     public String response;
+    public String prePrompt;
     @CreationTimestamp
     public LocalDateTime createdAt;
 }

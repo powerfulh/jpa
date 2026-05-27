@@ -72,14 +72,18 @@ public class AgentCore {
         if (!taskRepo.existsById(taskId)) throw new PlmException("No agent task", String.valueOf(taskId));
     }
 
-    public AgentTask createTask(Integer word, String request, String response) {
+    public AgentTask createTask(Integer word, String request, String response, String prePrompt) {
         if (taskRepo.existsByWord(word)) {
             throw new PlmException("이미 해당 단어로 타스크 생성됨, 재정의 불가", String.valueOf(word));
+        }
+        if (prePrompt == null || prePrompt.isBlank()) {
+            throw new PlmException("사전 프롬프트 응답 필수", "prePrompt");
         }
         AgentTask t = new AgentTask();
         t.word = word;
         t.request = request;
         t.response = response;
+        t.prePrompt = prePrompt;
         return taskRepo.save(t);
     }
 
