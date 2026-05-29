@@ -21,7 +21,7 @@ public class AgentCont {
     public record CompoundReq(int taskId, int word, int leftword, int rightword) {}
     public record ContextReq(int taskId, int leftword, int rightword, String kind) {}
     public record CommitReq(int taskId, String which, boolean learnContext) {}
-    public record QaReq(int taskId, int requestSentenceN, int responseSentenceN) {}
+    public record QaReq(int taskId) {}
 
     @PostMapping("/task")
     public AgentTask createTask(@RequestBody TaskReq req) {
@@ -55,7 +55,7 @@ public class AgentCont {
 
     @PostMapping("/qa")
     public void linkQa(@RequestBody QaReq req) {
-        core.linkQa(req.taskId(), req.requestSentenceN(), req.responseSentenceN());
+        core.linkQa(req.taskId());
     }
 
     @PostMapping("/reload")

@@ -207,8 +207,14 @@ public class AgentCore {
         AgentTask task = taskRepo.findById(taskId)
                 .orElseThrow(() -> new PlmException("No agent task", String.valueOf(taskId)));
         String src;
-        if ("request".equals(which)) src = task.request;
-        else if ("response".equals(which)) src = task.response;
+        boolean isRequest;
+        if ("request".equals(which)) { src = task.request; isRequest = true; }
+        else if ("response".equals(which)) {
+            if (task.requestSentenceCommit == null)
+                throw new PlmException("commit", "응답 문장 커밋은 요청 문장 커밋 후 가능 (task=" + taskId + ")");
+            src = task.response;
+            isRequest = false;
+        }
         else throw new PlmException("Invalid which (request|response)", which);
         Sentence sentence = plmCore.understand(src).get(0);
 
@@ -259,19 +265,26 @@ public class AgentCore {
             changeRepo.save(new AgentChange(taskId, AgentChange.ULTRON_CONTEXT, uc.getN(), null));
         }
 
+        if (isRequest) task.requestSentenceCommit = us.getN();
+        else task.responseSentenceCommit = us.getN();
         return us.getN();
     }
 
     @Transactional
-    public void linkQa(int taskId, int requestSentenceN, int responseSentenceN) {
-        requireTask(taskId);
-        PlmUltronSentence response = sentenceRepo.findById(responseSentenceN)
-                .orElseThrow(() -> new PlmException("No response sentence", String.valueOf(responseSentenceN)));
-        if (!sentenceRepo.existsById(requestSentenceN))
-            throw new PlmException("No request sentence", String.valueOf(requestSentenceN));
+    public void linkQa(int taskId) {
+        AgentTask task = taskRepo.findById(taskId)
+                .orElseThrow(() -> new PlmException("No agent task", String.valueOf(taskId)));
+        if (task.requestSentenceCommit == null)
+            throw new PlmException("qa", "요청 문장 미커밋 (task=" + taskId + ")");
+        if (task.responseSentenceCommit == null)
+            throw new PlmException("qa", "응답 문장 미커밋 (task=" + taskId + ")");
+        PlmUltronSentence response = sentenceRepo.findById(task.responseSentenceCommit)
+                .orElseThrow(() -> new PlmException("qa", "응답 sentence 없음 (n=" + task.responseSentenceCommit + ")"));
+        if (!sentenceRepo.existsById(task.requestSentenceCommit))
+            throw new PlmException("qa", "요청 sentence 없음 (n=" + task.requestSentenceCommit + ")");
         Integer prev = response.target;
-        response.target = requestSentenceN;
-        changeRepo.save(new AgentChange(taskId, AgentChange.QA, responseSentenceN, prev));
+        response.target = task.requestSentenceCommit;
+        changeRepo.save(new AgentChange(taskId, AgentChange.QA, task.responseSentenceCommit, prev));
     }
 
     public List<AgentTask> listTasks() {
