@@ -118,6 +118,16 @@
         .token.highlight .n { color: #fff; }
         .token.highlight .meta { color: rgba(255,255,255,0.85); }
 
+        .token.ctx-hl {
+          outline: 2px solid var(--confirm);
+          outline-offset: 1px;
+          box-shadow: 0 0 8px rgba(81, 207, 102, 0.5);
+        }
+
+        .lhud-row { cursor: pointer; }
+        .lhud-row:hover { background: rgba(77, 171, 247, 0.08); margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: 4px; }
+        .lhud-row.manual:hover { background: rgba(77, 171, 247, 0.22); }
+
         .actions {
           display: flex;
           gap: 8px;
@@ -197,6 +207,31 @@
         .hud-meta { color: var(--muted); font-size: 10px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .hud-time { color: var(--muted); font-size: 10px; white-space: nowrap; flex-shrink: 0; }
 
+        .hud-left { left: 20px; right: auto; }
+
+        .lhud-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 0;
+          border-bottom: 1px solid rgba(42, 42, 42, 0.55);
+          font-size: 12px;
+        }
+        .lhud-row:last-child { border-bottom: none; }
+        .lhud-op { color: var(--text); font-weight: 600; flex: 1; white-space: nowrap; }
+        .lhud-ctx { color: var(--accent); font-size: 10px; }
+        .lhud-via {
+          font-size: 9px; color: var(--muted);
+          border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px;
+          white-space: nowrap;
+        }
+        .lhud-row.manual {
+          background: rgba(77, 171, 247, 0.14);
+          margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: 4px;
+        }
+        .lhud-row.manual .lhud-op { color: #fff; }
+        .lhud-row.manual .lhud-via { color: var(--accent); border-color: var(--accent); font-weight: 700; }
+
         @media (max-width: 1300px) {
           .hud { display: none; }
         }
@@ -213,6 +248,11 @@
         <div data-slot="hud-body"><div class="empty">…</div></div>
     </aside>
 
+    <aside id="left-hud" class="hud hud-left">
+        <div class="hud-title"><span>첫 타스크 조정</span><span class="cnt" data-slot="lhud-cnt"></span></div>
+        <div data-slot="lhud-body"><div class="empty">…</div></div>
+    </aside>
+
 <script>
 function esc(s) {
     return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
@@ -221,6 +261,7 @@ function esc(s) {
 function renderCard(t) {
     const card = document.createElement('div')
     card.className = 'task-card'
+    card.dataset.taskN = t.n
     card.innerHTML = `
         <div class="task-head">
             <span class="task-word">${esc(t.word)}</span>
@@ -259,7 +300,7 @@ async function fillUnderstand(card, slot, src, wordN) {
         if (!list.length) { target.innerHTML = '<span class="empty">분해 후보 없음</span>'; return }
         const tokens = list[0].list
         target.innerHTML = tokens.map(tk => `
-            <span class="token${tk.n === wordN ? ' highlight' : ''}">
+            <span class="token${tk.n === wordN ? ' highlight' : ''}" data-n="${tk.n}">
                 <span class="w">${esc(tk.word)}</span>
                 <span class="n">${tk.n}</span>
                 <span class="meta">${esc(tk.type)}${tk.memo ? '·' + esc(tk.memo) : ''}</span>
@@ -279,6 +320,8 @@ async function act(n, kind, card) {
         if (res.ok) {
             card.remove()
             loadHud()
+            const first = document.querySelector('.task-card')
+            loadLeftHud(first ? Number(first.dataset.taskN) : null)
             const remaining = document.querySelectorAll('.task-card').length
             if (!remaining) {
                 document.querySelector('#list').innerHTML = '<div class="empty">검토할 task 없음</div>'
@@ -332,13 +375,90 @@ async function loadHud() {
     }
 }
 
+let COMPS = {}
+
+function opLabel(op) {
+    const isNew = op.includes('NEW')
+    const kind = op.endsWith('CNT') ? 'cnt' : 'space'
+    return (isNew ? '신규' : '증가') + ' ' + kind
+}
+
+function expandNs(n, acc) {
+    if (acc.has(n)) return acc
+    acc.add(n)
+    const c = COMPS[n]
+    if (c) { expandNs(c.leftword, acc); expandNs(c.rightword, acc) }
+    return acc
+}
+
+function clearCtxHl() {
+    document.querySelectorAll('.token.ctx-hl').forEach(t => t.classList.remove('ctx-hl'))
+}
+
+// 조정의 두 단어(context leftword/rightword)를 포함하는 첫 카드 토큰(결합이면 구성요소까지) 강조
+function highlightCtx(lw, rw) {
+    clearCtxHl()
+    const card = document.querySelector('.task-card')
+    if (!card) return
+    card.querySelectorAll('.token[data-n]').forEach(tok => {
+        const set = expandNs(Number(tok.dataset.n), new Set())
+        if (set.has(lw) || set.has(rw)) tok.classList.add('ctx-hl')
+    })
+}
+
+async function loadLeftHud(taskN) {
+    const body = document.querySelector('[data-slot="lhud-body"]')
+    const cnt = document.querySelector('[data-slot="lhud-cnt"]')
+    clearCtxHl()
+    if (taskN == null) {
+        if (cnt) cnt.textContent = ''
+        body.innerHTML = '<div class="empty">타스크 없음</div>'
+        return
+    }
+    try {
+        const [chRes, ctxRes, cpRes] = await Promise.all([
+            fetch('/jpaui/AgentChange'),
+            fetch('/jpaui/PlmContext'),
+            fetch('/jpaui/LlmWordCompound')
+        ])
+        if (!chRes.ok) { body.innerHTML = '<div class="empty">로드 실패</div>'; return }
+        const changes = await chRes.json()
+        const ctxMap = {}
+        if (ctxRes.ok) for (const c of await ctxRes.json()) ctxMap[c.n] = c
+        COMPS = {}
+        if (cpRes.ok) for (const c of await cpRes.json()) COMPS[c.word] = c
+        const rows = changes
+            .filter(c => c.task === taskN && typeof c.op === 'string' && c.op.startsWith('CONTEXT_'))
+            .sort((a, b) => a.n - b.n)
+        if (cnt) cnt.textContent = 'task #' + taskN + ' · ' + rows.length + '건'
+        if (!rows.length) { body.innerHTML = '<div class="empty">CONTEXT 조정 없음</div>'; return }
+        body.innerHTML = rows.map(c => {
+            const ctx = ctxMap[c.entityN] || {}
+            const manual = c.viaCommit === false
+            return `
+            <div class="lhud-row${manual ? ' manual' : ''}" data-lw="${ctx.leftword ?? ''}" data-rw="${ctx.rightword ?? ''}">
+                <span class="lhud-op">${esc(opLabel(c.op))}</span>
+                <span class="lhud-ctx">#${c.entityN}</span>
+                <span class="lhud-via">${manual ? '직접' : '커밋'}</span>
+            </div>`
+        }).join('')
+        body.querySelectorAll('.lhud-row').forEach(row => {
+            const lw = Number(row.dataset.lw), rw = Number(row.dataset.rw)
+            row.addEventListener('mouseenter', () => highlightCtx(lw, rw))
+            row.addEventListener('mouseleave', clearCtxHl)
+        })
+    } catch (e) {
+        body.innerHTML = '<div class="empty">에러</div>'
+    }
+}
+
 async function load() {
     const list = document.querySelector('#list')
     try {
         const res = await fetch('/llm/agent/task')
         if (!res.ok) { list.innerHTML = '<div class="empty">로드 실패</div>'; return }
         const tasks = await res.json()
-        if (!tasks.length) { list.innerHTML = '<div class="empty">검토할 task 없음</div>'; return }
+        if (!tasks.length) { list.innerHTML = '<div class="empty">검토할 task 없음</div>'; loadLeftHud(null); return }
         list.innerHTML = ''
         for (const t of tasks) {
             const card = renderCard(t)
@@ -346,6 +466,7 @@ async function load() {
             fillUnderstand(card, 'req', t.request, t.word)
             fillUnderstand(card, 'res', t.response, t.word)
         }
+        loadLeftHud(tasks[0].n)
     } catch (e) {
         list.innerHTML = `<div class="empty">에러: ${esc(e.message)}</div>`
     }
