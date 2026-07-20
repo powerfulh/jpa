@@ -85,6 +85,12 @@
           margin-bottom: 6px;
         }
 
+        .sentence-src.pre-prompt {
+          font-size: 13px;
+          color: var(--muted);
+          font-style: italic;
+        }
+
         .tokens {
           display: flex;
           flex-wrap: wrap;
@@ -169,6 +175,10 @@ function renderCard(t) {
             <div class="sentence-label">요청</div>
             <div class="sentence-src">${esc(t.request)}</div>
             <div class="tokens" data-slot="req"><span class="empty">분해 중...</span></div>
+        </div>
+        <div class="sentence">
+            <div class="sentence-label">사전 프롬프트</div>
+            <div class="sentence-src pre-prompt">${esc(t.prePrompt)}</div>
         </div>
         <div class="sentence">
             <div class="sentence-label">응답</div>
