@@ -49,6 +49,10 @@ public class LlmWord implements Word {
         return memo;
     }
 
+    public LocalDateTime getUpdatedDate() {
+        return updatedDate;
+    }
+
     // 아래는 에이전트 용
     public void setType(String type) {
         this.type = type;
