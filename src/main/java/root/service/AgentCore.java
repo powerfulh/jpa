@@ -287,6 +287,15 @@ public class AgentCore {
         changeRepo.save(new AgentChange(taskId, AgentChange.QA, task.responseSentenceCommit, prev));
     }
 
+    @Transactional
+    public void setRePrompt(int taskId, String rePrompt) {
+        AgentTask task = taskRepo.findById(taskId)
+                .orElseThrow(() -> new PlmException("No agent task", String.valueOf(taskId)));
+        if (rePrompt == null || rePrompt.isBlank())
+            throw new PlmException("재프롬프트 응답 필수", "rePrompt");
+        task.rePrompt = rePrompt;
+    }
+
     public List<AgentTask> listTasks() {
         return taskRepo.findAll();
     }

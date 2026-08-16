@@ -281,6 +281,10 @@ function renderCard(t) {
             <div class="sentence-src">${esc(t.response)}</div>
             <div class="tokens" data-slot="res"><span class="empty">분해 중...</span></div>
         </div>
+        <div class="sentence">
+            <div class="sentence-label">재프롬프트</div>
+            <div class="sentence-src pre-prompt">${t.rePrompt ? esc(t.rePrompt) : '(없음)'}</div>
+        </div>
         <div class="actions">
             <button class="btn-confirm">확정</button>
             <button class="btn-rollback">롤백</button>

@@ -17,6 +17,7 @@ public class AgentTask {
     public String request;
     public String response;
     public String prePrompt;
+    public String rePrompt;
     public Integer requestSentenceCommit;
     public Integer responseSentenceCommit;
     @CreationTimestamp

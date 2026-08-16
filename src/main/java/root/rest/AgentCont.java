@@ -22,6 +22,7 @@ public class AgentCont {
     public record ContextReq(int taskId, int leftword, int rightword, String kind) {}
     public record CommitReq(int taskId, String which, boolean learnContext) {}
     public record QaReq(int taskId) {}
+    public record RePromptReq(int taskId, String rePrompt) {}
 
     @PostMapping("/task")
     public AgentTask createTask(@RequestBody TaskReq req) {
@@ -56,6 +57,11 @@ public class AgentCont {
     @PostMapping("/qa")
     public void linkQa(@RequestBody QaReq req) {
         core.linkQa(req.taskId());
+    }
+
+    @PostMapping("/reprompt")
+    public void setRePrompt(@RequestBody RePromptReq req) {
+        core.setRePrompt(req.taskId(), req.rePrompt());
     }
 
     @PostMapping("/reload")
