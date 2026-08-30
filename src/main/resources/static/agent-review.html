@@ -235,6 +235,30 @@
         @media (max-width: 1300px) {
           .hud { display: none; }
         }
+
+        .toast {
+          position: fixed;
+          bottom: 24px;
+          left: 50%;
+          transform: translateX(-50%) translateY(8px);
+          background: var(--card);
+          color: var(--text);
+          border: 1px solid var(--border);
+          border-left: 4px solid var(--confirm);
+          border-radius: 8px;
+          padding: 12px 18px;
+          font-size: 14px;
+          font-weight: 600;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+          opacity: 0;
+          transition: opacity 0.25s, transform 0.25s;
+          z-index: 100;
+        }
+        .toast.rollback { border-left-color: var(--rollback); }
+        .toast.show {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -315,6 +339,21 @@ async function fillUnderstand(card, slot, src, wordN) {
     }
 }
 
+let toastTimer = null
+function showToast(message, kind) {
+    document.querySelectorAll('.toast').forEach(t => t.remove())
+    if (toastTimer) clearTimeout(toastTimer)
+    const toast = document.createElement('div')
+    toast.className = 'toast' + (kind === 'rollback' ? ' rollback' : '')
+    toast.textContent = message
+    document.body.appendChild(toast)
+    requestAnimationFrame(() => toast.classList.add('show'))
+    toastTimer = setTimeout(() => {
+        toast.classList.remove('show')
+        setTimeout(() => toast.remove(), 300)
+    }, 5000)
+}
+
 async function act(n, kind, card) {
     const label = kind === 'confirm' ? '확정' : '롤백'
     if (!window.confirm(`task #${n} ${label}하시겠습니까?`)) return
@@ -323,6 +362,7 @@ async function act(n, kind, card) {
         const res = await fetch(`/llm/agent/task/${n}/${kind}`, { method: 'POST' })
         if (res.ok) {
             card.remove()
+            showToast(`task #${n} ${label} 완료`, kind)
             loadHud()
             const first = document.querySelector('.task-card')
             loadLeftHud(first ? Number(first.dataset.taskN) : null)
