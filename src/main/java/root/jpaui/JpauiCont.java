@@ -1,7 +1,6 @@
 package root.jpaui;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.metamodel.EntityType;
 import org.springframework.core.ResolvableType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.Repository;
@@ -32,10 +31,6 @@ public class JpauiCont {
         }
     }
 
-    @GetMapping("/meta")
-    public List<String> getMeta() {
-        return entityManager.getMetamodel().getEntities().stream().map(EntityType::getName).toList();
-    }
     @GetMapping("/{table}")
     public List<?> getList(@PathVariable String table) {
         return repositoryMap.get(table).findAll();
