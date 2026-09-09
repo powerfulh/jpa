@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>수동 학습</title>
+    <link rel="stylesheet" href="common.css">
+    <style>
+        :root {
+          --confirm: #51cf66;
+          --rollback: #ff6b6b;
+          --token-bg: #2a2a2a;
+        }
+
+        body > div, body > form {
+            margin: 0 auto;
+            max-width: 800px;
+        }
+
+        .task-card {
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 14px;
+          margin-bottom: 12px;
+        }
+
+        .task-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
+          padding-bottom: 10px;
+          border-bottom: 1px solid var(--border);
+        }
+
+        .task-word {
+          font-weight: 600;
+          font-size: 16px;
+        }
+
+        .task-n {
+          color: var(--accent);
+          font-weight: 600;
+          font-size: 13px;
+        }
+
+        .sentence {
+          margin-bottom: 12px;
+        }
+
+        .sentence-label {
+          color: var(--muted);
+          font-size: 11px;
+          margin-bottom: 4px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .sentence-src {
+          font-size: 15px;
+          margin-bottom: 6px;
+        }
+
+        .sentence-src.pre-prompt {
+          font-size: 13px;
+          color: var(--muted);
+          font-style: italic;
+        }
+
+        .tokens {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+
+        .token {
+          background: var(--token-bg);
+          padding: 4px 8px;
+          border-radius: 6px;
+          font-size: 12px;
+          display: inline-flex;
+          gap: 6px;
+          align-items: baseline;
+        }
+
+        .token .w { color: var(--text); font-weight: 600; }
+        .token .n { color: var(--accent); font-size: 11px; }
+        .token .meta { color: var(--muted); font-size: 11px; }
+
+        .token.highlight {
+          background: var(--accent);
+        }
+        .token.highlight .w { color: #fff; }
+        .token.highlight .n { color: #fff; }
+        .token.highlight .meta { color: rgba(255,255,255,0.85); }
+
+        .token.ctx-hl {
+          outline: 2px solid var(--confirm);
+          outline-offset: 1px;
+          box-shadow: 0 0 8px rgba(81, 207, 102, 0.5);
+        }
+
+        .lhud-row { cursor: pointer; }
+        .lhud-row:hover { background: rgba(77, 171, 247, 0.08); margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: 4px; }
+        .lhud-row.manual:hover { background: rgba(77, 171, 247, 0.22); }
+
+        .actions {
+          display: flex;
+          gap: 8px;
+          margin-top: 12px;
+        }
+
+        button {
+          flex: 1;
+          padding: 10px;
+          border: none;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 14px;
+          cursor: pointer;
+          color: white;
+          font-family: inherit;
+        }
+
+        button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .btn-confirm { background: var(--confirm); }
+        .btn-rollback { background: var(--rollback); }
+
+        .empty {
+          text-align: center;
+          color: var(--muted);
+          padding: 30px;
+          font-size: 14px;
+        }
+
+        .hud {
+          position: fixed;
+          top: 64px;
+          right: 20px;
+          width: 268px;
+          max-height: calc(100vh - 96px);
+          overflow-y: auto;
+          background: rgba(18, 18, 18, 0.82);
+          border: 1px solid var(--accent);
+          border-radius: 10px;
+          padding: 12px 14px;
+          box-shadow: 0 0 18px rgba(77, 171, 247, 0.15);
+          backdrop-filter: blur(4px);
+          font-variant-numeric: tabular-nums;
+        }
+
+        .hud-title {
+          color: var(--accent);
+          font-weight: 700;
+          font-size: 11px;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          margin-bottom: 10px;
+          padding-bottom: 8px;
+          border-bottom: 1px solid var(--border);
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+        }
+        .hud-title .cnt { color: var(--muted); font-weight: 400; font-size: 10px; letter-spacing: 0; }
+
+        .hud-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          gap: 8px;
+          padding: 6px 0;
+          border-bottom: 1px solid rgba(42, 42, 42, 0.55);
+        }
+        .hud-row:last-child { border-bottom: none; }
+        .hud-main { min-width: 0; }
+        .hud-w { color: var(--text); font-weight: 600; font-size: 13px; }
+        .hud-n { color: var(--accent); font-size: 10px; margin-left: 4px; }
+        .hud-meta { color: var(--muted); font-size: 10px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .hud-time { color: var(--muted); font-size: 10px; white-space: nowrap; flex-shrink: 0; }
+
+        .lhud-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 0;
+          border-bottom: 1px solid rgba(42, 42, 42, 0.55);
+          font-size: 12px;
+        }
+        .lhud-row:last-child { border-bottom: none; }
+        .lhud-op { color: var(--text); font-weight: 600; flex: 1; white-space: nowrap; }
+        .lhud-ctx { color: var(--accent); font-size: 10px; }
+        .lhud-via {
+          font-size: 9px; color: var(--muted);
+          border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px;
+          white-space: nowrap;
+        }
+        .lhud-row.manual {
+          background: rgba(77, 171, 247, 0.14);
+          margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: 4px;
+        }
+        .lhud-row.manual .lhud-op { color: #fff; }
+        .lhud-row.manual .lhud-via { color: var(--accent); border-color: var(--accent); font-weight: 700; }
+
+        @media (max-width: 1300px) {
+          .hud { display: none; }
+        }
+
+        .toast {
+          position: fixed;
+          bottom: 24px;
+          left: 50%;
+          transform: translateX(-50%) translateY(8px);
+          background: var(--card);
+          color: var(--text);
+          border: 1px solid var(--border);
+          border-left: 4px solid var(--confirm);
+          border-radius: 8px;
+          padding: 12px 18px;
+          font-size: 14px;
+          font-weight: 600;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+          opacity: 0;
+          transition: opacity 0.25s, transform 0.25s;
+          z-index: 100;
+        }
+        .toast.rollback { border-left-color: var(--rollback); }
+        .toast.show {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <form>
+		<div><label for="input-sentence">학습 문장</label></div>
+        <input id="input-sentence" name="s">
+    </form>
+
+    <div id="list" class="list-container">
+        <div class="empty"></div>
+    </div>
+
+    <aside id="hud" class="hud">
+        <div class="hud-title"><span>최근 갱신 단어</span><span class="cnt" data-slot="hud-cnt"></span></div>
+        <div data-slot="hud-body"><div class="empty">…</div></div>
+    </aside>
+
+	<script>
+	const sentenceQuery = new URLSearchParams(location.search).get('s')
+	if (sentenceQuery) {
+		load()
+	}
+
+	function esc(s) {
+		return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+	}
+
+	function renderCard() {
+		const card = document.createElement('div')
+		card.className = 'task-card'
+		card.innerHTML = `
+			<div class="sentence">
+				<div class="sentence-label">요청</div>
+				<div class="sentence-src">${esc(sentenceQuery)}</div>
+				<div class="tokens" data-slot="req"><span class="empty">분해 중...</span></div>
+			</div>
+			<div class="actions">
+				<button class="btn-confirm">확정</button>
+				<button class="btn-rollback">롤백</button>
+			</div>
+		`
+		return card
+	}
+
+	async function fillUnderstand(card, slot, src, wordN) {
+		const target = card.querySelector(`[data-slot="${slot}"]`)
+		try {
+			const res = await fetch('/llm/understand?src=' + encodeURIComponent(src))
+			if (!res.ok) { target.innerHTML = '<span class="empty">분해 실패</span>'; return }
+			const list = await res.json()
+			if (!list.length) { target.innerHTML = '<span class="empty">분해 후보 없음</span>'; return }
+			const tokens = list[0].list
+			target.innerHTML = tokens.map(tk => `
+				<span class="token${tk.n === wordN ? ' highlight' : ''}" data-n="${tk.n}">
+					<span class="w">${esc(tk.word)}</span>
+					<span class="n">${tk.n}</span>
+					<span class="meta">${esc(tk.type)}${tk.memo ? '·' + esc(tk.memo) : ''}</span>
+				</span>
+			`).join('')
+		} catch (e) {
+			target.innerHTML = '<span class="empty">에러</span>'
+		}
+	}
+
+	let toastTimer = null
+	function showToast(message, kind) {
+		document.querySelectorAll('.toast').forEach(t => t.remove())
+		if (toastTimer) clearTimeout(toastTimer)
+		const toast = document.createElement('div')
+		toast.className = 'toast' + (kind === 'rollback' ? ' rollback' : '')
+		toast.textContent = message
+		document.body.appendChild(toast)
+		requestAnimationFrame(() => toast.classList.add('show'))
+		toastTimer = setTimeout(() => {
+			toast.classList.remove('show')
+			setTimeout(() => toast.remove(), 300)
+		}, 5000)
+	}
+
+	function relTime(iso) {
+		if (!iso) return ''
+		const d = new Date(iso), s = Math.floor((Date.now() - d.getTime()) / 1000)
+		if (isNaN(s)) return ''
+		if (s < 0) return '방금'
+		if (s < 60) return s + '초 전'
+		const m = Math.floor(s / 60); if (m < 60) return m + '분 전'
+		const h = Math.floor(m / 60); if (h < 24) return h + '시간 전'
+		const dd = Math.floor(h / 24); if (dd < 30) return dd + '일 전'
+		return String(iso).slice(5, 10)
+	}
+
+	async function loadHud() {
+		const body = document.querySelector('[data-slot="hud-body"]')
+		const cnt = document.querySelector('[data-slot="hud-cnt"]')
+		try {
+			const res = await fetch('/jpaui/LlmWord')
+			if (!res.ok) { body.innerHTML = '<div class="empty">로드 실패</div>'; return }
+			const words = await res.json()
+			if (cnt) cnt.textContent = 'total ' + words.length
+			const top = words
+				.filter(w => w.updatedDate)
+				.sort((a, b) => String(b.updatedDate).localeCompare(String(a.updatedDate)))
+				.slice(0, 10)
+			if (!top.length) { body.innerHTML = '<div class="empty">없음</div>'; return }
+			body.innerHTML = top.map(w => `
+				<div class="hud-row">
+					<div class="hud-main">
+						<div><span class="hud-w">${esc(w.word)}</span><span class="hud-n">#${w.n}</span></div>
+						<div class="hud-meta">${esc(w.type)}${w.memo ? ' · ' + esc(w.memo) : ''}</div>
+					</div>
+					<span class="hud-time">${relTime(w.updatedDate)}</span>
+				</div>
+			`).join('')
+		} catch (e) {
+			body.innerHTML = '<div class="empty">에러</div>'
+		}
+	}
+
+	let COMPS = {}
+
+	function opLabel(op) {
+		const isNew = op.includes('NEW')
+		const kind = op.endsWith('CNT') ? 'cnt' : 'space'
+		return (isNew ? '신규' : '증가') + ' ' + kind
+	}
+
+	function expandNs(n, acc) {
+		if (acc.has(n)) return acc
+		acc.add(n)
+		const c = COMPS[n]
+		if (c) { expandNs(c.leftword, acc); expandNs(c.rightword, acc) }
+		return acc
+	}
+
+	function clearCtxHl() {
+		document.querySelectorAll('.token.ctx-hl').forEach(t => t.classList.remove('ctx-hl'))
+	}
+
+	// 조정의 두 단어(context leftword/rightword)를 포함하는 첫 카드 토큰(결합이면 구성요소까지) 강조
+	function highlightCtx(lw, rw) {
+		clearCtxHl()
+		const card = document.querySelector('.task-card')
+		if (!card) return
+		card.querySelectorAll('.token[data-n]').forEach(tok => {
+			const set = expandNs(Number(tok.dataset.n), new Set())
+			if (set.has(lw) || set.has(rw)) tok.classList.add('ctx-hl')
+		})
+	}
+
+	function load() {
+		// document.querySelector('#list > div.empty').textContent = '로드 중...'
+		const list = document.querySelector('#list')
+		// const res = await fetch('/llm/agent/task')
+		// if (!res.ok) { list.innerHTML = '<div class="empty">로드 실패</div>'; return }
+		// const tasks = await res.json()
+		// if (!tasks.length) { list.innerHTML = '<div class="empty">검토할 task 없음</div>'; return }
+		list.innerHTML = ''
+		const card = renderCard()
+		list.appendChild(card)
+		// fillUnderstand(card, 'req', t.request, t.word)
+		// fillUnderstand(card, 'res', t.response, t.word)
+	}
+
+	loadHud()
+	</script>
+</body>
+</html>
