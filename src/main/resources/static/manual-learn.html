@@ -237,9 +237,9 @@
     </style>
 </head>
 <body>
-    <form>
+    <form style="text-align: center;">
 		<div><label for="input-sentence">학습 문장</label></div>
-        <input id="input-sentence" name="s">
+        <input id="input-sentence" name="s" style="width: 80%;">
     </form>
 
     <div id="list" class="list-container">
@@ -271,8 +271,8 @@
 				<div class="tokens" data-slot="req"><span class="empty">분해 중...</span></div>
 			</div>
 			<div class="actions">
-				<button class="btn-confirm">확정</button>
-				<button class="btn-rollback">롤백</button>
+				<button class="btn-confirm">False 커밋</button>
+				<button class="btn-rollback">True 커밋</button>
 			</div>
 		`
 		return card
@@ -384,17 +384,11 @@
 	}
 
 	function load() {
-		// document.querySelector('#list > div.empty').textContent = '로드 중...'
 		const list = document.querySelector('#list')
-		// const res = await fetch('/llm/agent/task')
-		// if (!res.ok) { list.innerHTML = '<div class="empty">로드 실패</div>'; return }
-		// const tasks = await res.json()
-		// if (!tasks.length) { list.innerHTML = '<div class="empty">검토할 task 없음</div>'; return }
 		list.innerHTML = ''
 		const card = renderCard()
 		list.appendChild(card)
-		// fillUnderstand(card, 'req', t.request, t.word)
-		// fillUnderstand(card, 'res', t.response, t.word)
+		fillUnderstand(card, 'req', sentenceQuery)
 	}
 
 	loadHud()
