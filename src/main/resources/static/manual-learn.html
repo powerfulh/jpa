@@ -268,7 +268,7 @@
 			<div class="sentence">
 				<div class="sentence-label">요청</div>
 				<div class="sentence-src">${esc(sentenceQuery)}</div>
-				<div class="tokens" data-slot="req"><span class="empty">분해 중...</span></div>
+				<div class="tokens-list" data-slot="req"><span class="empty">분해 중...</span></div>
 			</div>
 			<div class="actions">
 				<button class="btn-confirm">False 커밋</button>
@@ -285,16 +285,26 @@
 			if (!res.ok) { target.innerHTML = '<span class="empty">분해 실패</span>'; return }
 			const list = await res.json()
 			if (!list.length) { target.innerHTML = '<span class="empty">분해 후보 없음</span>'; return }
-			const tokens = list[0].list
-			target.innerHTML = tokens.map(tk => `
-				<span class="token${tk.n === wordN ? ' highlight' : ''}" data-n="${tk.n}">
-					<span class="w">${esc(tk.word)}</span>
-					<span class="n">${tk.n}</span>
-					<span class="meta">${esc(tk.type)}${tk.memo ? '·' + esc(tk.memo) : ''}</span>
-				</span>
-			`).join('')
+			target.innerHTML = ''
+			list.forEach(item => {
+				const tokensItem = document.createElement('div')
+				tokensItem.className = 'tokens'
+				tokensItem.style.marginBottom = '8px'
+				tokensItem.innerHTML = item.list.map(tk => `
+					<span class="token${tk.n === wordN ? ' highlight' : ''}" data-n="${tk.n}">
+						<span class="w">${esc(tk.word)}</span>
+						<span class="n">${tk.n}</span>
+						<span class="meta">${esc(tk.type)}${tk.memo ? '·' + esc(tk.memo) : ''}</span>
+					</span>
+				`).join('')
+				target.appendChild(tokensItem)
+				const pointDiv = document.createElement('div')
+				pointDiv.textContent = `Point: ${item.point}`
+				tokensItem.appendChild(pointDiv)
+				target.appendChild(document.createElement('hr'))
+			})
 		} catch (e) {
-			target.innerHTML = '<span class="empty">에러</span>'
+			target.innerHTML = `<span class="empty">${e}</span>`
 		}
 	}
 
@@ -392,6 +402,12 @@
 	}
 
 	loadHud()
+
+	function falseCommit() {
+		fetch(`/llm/commit?src=${encodeURIComponent(sentenceQuery)}&learnContext=false`).then(res => {
+			if(res.ok) showToast('False 커밋 완료')
+		})
+	}
 	</script>
 </body>
 </html>
