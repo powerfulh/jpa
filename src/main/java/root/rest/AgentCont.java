@@ -21,6 +21,7 @@ public class AgentCont {
     public record CompoundReq(int taskId, int word, int leftword, int rightword) {}
     public record ContextReq(int taskId, int leftword, int rightword, String kind) {}
     public record CommitReq(int taskId, String which, boolean learnContext) {}
+    public record SmartCommitReq(int taskId, String which) {}
     public record QaReq(int taskId) {}
     public record RePromptReq(int taskId, String rePrompt) {}
 
@@ -52,6 +53,21 @@ public class AgentCont {
     @PostMapping("/commit")
     public Map<String, Integer> commit(@RequestBody CommitReq req) {
         return Map.of("n", core.commit(req.taskId(), req.which(), req.learnContext()));
+    }
+
+    @PostMapping("/smart-commit")
+    public Map<String, Object> smartCommit(@RequestBody SmartCommitReq req) {
+        try {
+            return Map.of(
+                    "n", core.commit(req.taskId(), req.which(), false),
+                    "learnContext", false
+            );
+        } catch (RuntimeException ignored) {
+            return Map.of(
+                    "n", core.commit(req.taskId(), req.which(), true),
+                    "learnContext", true
+            );
+        }
     }
 
     @PostMapping("/qa")
