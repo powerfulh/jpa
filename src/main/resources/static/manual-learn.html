@@ -291,7 +291,7 @@
 				tokensItem.className = 'tokens'
 				tokensItem.style.marginBottom = '8px'
 				tokensItem.innerHTML = item.list.map(tk => `
-					<span class="token${tk.n === wordN ? ' highlight' : ''}" data-n="${tk.n}">
+					<span class="token${tk.n === wordN ? ' highlight' : ''}" data-n="${tk.n}" title="right context: ${tk.rightContext}">
 						<span class="w">${esc(tk.word)}</span>
 						<span class="n">${tk.n}</span>
 						<span class="meta">${esc(tk.type)}${tk.memo ? '·' + esc(tk.memo) : ''}</span>
