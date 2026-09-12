@@ -399,6 +399,7 @@
 		const card = renderCard()
 		list.appendChild(card)
         document.querySelector('button.btn-confirm').addEventListener('click', falseCommit)
+        document.querySelector('button.btn-rollback').addEventListener('click', trueCommit)
 		fillUnderstand(card, 'req', sentenceQuery)
 	}
 
@@ -407,12 +408,20 @@
 	function falseCommit({target}) {
         target.disabled = true
 		fetch(`/llm/commit?src=${encodeURIComponent(sentenceQuery)}&learnContext=false`, {method: 'post'}).then(res => {
-			if(res.ok) showToast('False 커밋 완료')
-            else {
+			if(res.ok) {
+                showToast('False 커밋 완료')
+                document.querySelector('button.btn-rollback').disabled = true
+            } else {
                 res.json().then(j => showToast(j['No context'], 'rollback'))
             }
 		})
 	}
+    function trueCommit({target}) {
+        target.disabled = true
+        fetch(`/llm/commit?src=${encodeURIComponent(sentenceQuery)}&learnContext=true`, {method: 'post'}).then(res => {
+            if(res.ok) showToast('True 커밋 완료')
+        })
+    }
 	</script>
 </body>
 </html>
