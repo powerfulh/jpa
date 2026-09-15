@@ -151,12 +151,13 @@ public class PlmCore {
         List<Context> contextList = plmContextRepo.findAll().stream().map(item -> (Context) item).toList();
         var compoundList = llmWordCompoundRepo.findAll().stream().map(item -> (Compound) item).toList();
         SuccessHistory successHistory = new SuccessHistory();
+        Set<String> sentenceKeySet = new HashSet<>();
         logger.info("opener cnt: {}", openerList.size());
         for (var opener: openerList) {
             logger.info("understanding with opener: {}", opener.getWord());
             List<Toke> understandList = new ArrayList<>();
             try {
-                StaticUtil.separateToken(understandList, understandTarget.pushToke(understandList, opener), new Dict(wordList), failHistory, contextList, sentenceList, compoundList, successHistory, contextCore);
+                StaticUtil.separateToken(understandList, understandTarget.pushToke(understandList, opener), new Dict(wordList), failHistory, contextList, sentenceList, compoundList, successHistory, contextCore, sentenceKeySet);
             } catch (PlmException plmException) {
                 e = plmException;
             }

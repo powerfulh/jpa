@@ -12,9 +12,11 @@ public class StaticUtil {
         return item -> item.getLeftword() == lw && item.getRightword() == rw;
     }
 
-    public static void separateToken(List<Toke> understandList, UnderstandTarget src, final Dict wordList, Map<String, List<Word>> failHistory, List<Context> contextList, List<Sentence> sentenceList, List<Compound> compoundList, SuccessHistory successHistory, ContextCore contextCore) {
-        if(src.success()) sentenceList.add(new Sentence(understandList, contextList));
-        else {
+    public static void separateToken(List<Toke> understandList, UnderstandTarget src, final Dict wordList, Map<String, List<Word>> failHistory, List<Context> contextList, List<Sentence> sentenceList, List<Compound> compoundList, SuccessHistory successHistory, ContextCore contextCore, Set<String> sentenceKeySet) {
+        if(src.success()) {
+            final var s = new Sentence(understandList, contextList);
+            if(sentenceKeySet.add(s.key)) sentenceList.add(s);
+        } else {
             Toke lastUnderstand = understandList.get(understandList.size() - 1);
             var sh = successHistory.get(src.getRight(), lastUnderstand.getN());
             if(sh != null) {
@@ -54,7 +56,7 @@ public class StaticUtil {
                 failHistory.computeIfAbsent(src.getRight(), k -> new ArrayList<>());
                 failHistory.get(src.getRight()).add(lastUnderstand);
                 understandList.remove(understandList.size() - 1);
-                separateToken(understandList, src, wordList, failHistory, contextList, sentenceList, compoundList, successHistory, contextCore);
+                separateToken(understandList, src, wordList, failHistory, contextList, sentenceList, compoundList, successHistory, contextCore, sentenceKeySet);
                 return;
             }
             final Toke best = sameList.get(sameList.size() - 1);
@@ -64,14 +66,14 @@ public class StaticUtil {
                         .filter(item -> item.getRightContext() > 0)
                         .forEach(item -> {
                             var clone = new ArrayList<>(understandList);
-                            separateToken(clone, src.clone().pushToke(clone, item), wordList, failHistory, contextList, sentenceList, compoundList, successHistory, contextCore);
+                            separateToken(clone, src.clone().pushToke(clone, item), wordList, failHistory, contextList, sentenceList, compoundList, successHistory, contextCore, sentenceKeySet);
                         });
                 if(best.getRightContext() < 1) best.otherOption = true;
             }
             final String right = src.getRight();
             final int understandSize = understandList.size();
             final var currentUnderstand = understandList.stream().map(Toke::getN).toList();
-            separateToken(understandList, src.pushToke(understandList, best), wordList, failHistory, contextList, sentenceList, compoundList, successHistory, contextCore);
+            separateToken(understandList, src.pushToke(understandList, best), wordList, failHistory, contextList, sentenceList, compoundList, successHistory, contextCore, sentenceKeySet);
             var branchList = sentenceList.subList(ss, sentenceList.size());
             if(!branchList.isEmpty()) {
                 int keepCnt = 0;
