@@ -22,7 +22,8 @@ public class StaticUtil {
                 sh.toBe().forEach(item -> {
                     var merge = new ArrayList<>(beforeMerge);
                     merge.addAll(item);
-                    sentenceList.add(new Sentence(merge, contextList));
+                    final var s = new Sentence(merge, contextList);
+                    if(s.contextPoint > sentenceList.get(sentenceList.size() - 1).contextPoint) sentenceList.add(s);
                 });
                 return;
             }
