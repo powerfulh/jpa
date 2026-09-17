@@ -140,11 +140,10 @@ public class PlmCore {
 
     public List<Sentence> understand(String pureSrc) {
         var symbols = llmWordRepo.findByType(symbolType).stream().map(LlmWord::getWord).collect(Collectors.joining()).toCharArray();
-        final String src = replaceRepeatedChars.replaceRepeatedChars(pureSrc.replaceAll("\\s", ""), symbols);
         var wordList = llmWordRepo.findByTypeNot("opener").stream().map(item -> (Word) item).toList();
         final UnderstandTarget understandTarget = new UnderstandTarget(replaceRepeatedChars.replaceRepeatedChars(pureSrc, symbols));
         var openerList = wordList.stream().map(understandTarget::getAvailableToke).filter(Objects::nonNull).toList();
-        if (openerList.isEmpty()) throw new PlmException("Fail to set the opening word", src);
+        if (openerList.isEmpty()) throw new PlmException("Fail to set the opening word", understandTarget.getRight());
         PlmException e = null;
         Map<String, List<Word>> failHistory = new HashMap<>();
         List<Sentence> sentenceList = new ArrayList<>();
