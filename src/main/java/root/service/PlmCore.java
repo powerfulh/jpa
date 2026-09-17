@@ -21,7 +21,6 @@ public class PlmCore {
     final PlmLearnRepo plmLearnRepo;
     final LlmWordCompoundRepo llmWordCompoundRepo;
     final PlmSrcBoxRepo plmSrcBoxRepo;
-    final ReplaceRepeatedChars replaceRepeatedChars;
     final PlmContextRepo plmContextRepo;
     final UnderstandBoxRepo understandBoxRepo;
     final UnderstandBoxWordRepo understandBoxWordRepo;
@@ -34,12 +33,11 @@ public class PlmCore {
 
     final Logger logger = LoggerFactory.getLogger(PlmCore.class);
 
-    public PlmCore(LlmWordRepo llmWordRepo, PlmLearnRepo plmLearnRepo, LlmWordCompoundRepo llmWordCompoundRepo, PlmSrcBoxRepo plmSrcBoxRepo, ReplaceRepeatedChars replaceRepeatedChars, PlmContextRepo plmContextRepo, UnderstandBoxRepo understandBoxRepo, UnderstandBoxWordRepo understandBoxWordRepo, ContextCore contextCore, PlmUltronSentenceRepo ultronSentenceRepo, PlmUltronContextRepo ultronContextRepo) {
+    public PlmCore(LlmWordRepo llmWordRepo, PlmLearnRepo plmLearnRepo, LlmWordCompoundRepo llmWordCompoundRepo, PlmSrcBoxRepo plmSrcBoxRepo, PlmContextRepo plmContextRepo, UnderstandBoxRepo understandBoxRepo, UnderstandBoxWordRepo understandBoxWordRepo, ContextCore contextCore, PlmUltronSentenceRepo ultronSentenceRepo, PlmUltronContextRepo ultronContextRepo) {
         this.llmWordRepo = llmWordRepo;
         this.plmLearnRepo = plmLearnRepo;
         this.llmWordCompoundRepo = llmWordCompoundRepo;
         this.plmSrcBoxRepo = plmSrcBoxRepo;
-        this.replaceRepeatedChars = replaceRepeatedChars;
         this.plmContextRepo = plmContextRepo;
         this.understandBoxRepo = understandBoxRepo;
         this.understandBoxWordRepo = understandBoxWordRepo;
@@ -116,7 +114,7 @@ public class PlmCore {
     @Transactional
     public void learn(String input) {
         var symbols = llmWordRepo.findByType(symbolType).stream().map(LlmWord::getWord).collect(Collectors.joining()).toCharArray();
-        String[] cleanInput = replaceRepeatedChars.replaceRepeatedChars(input, symbols).split(" ");
+        String[] cleanInput = ReplaceRepeatedChars.replaceRepeatedChars(input, symbols).split(" ");
         for(int i = 0; i < cleanInput.length; i++) {
             String item = cleanInput[i];
             int next = i + 1;
@@ -141,7 +139,7 @@ public class PlmCore {
     public List<Sentence> understand(String pureSrc) {
         var symbols = llmWordRepo.findByType(symbolType).stream().map(LlmWord::getWord).collect(Collectors.joining()).toCharArray();
         var wordList = llmWordRepo.findByTypeNot("opener").stream().map(item -> (Word) item).toList();
-        final UnderstandTarget understandTarget = new UnderstandTarget(replaceRepeatedChars.replaceRepeatedChars(pureSrc, symbols));
+        final UnderstandTarget understandTarget = new UnderstandTarget(ReplaceRepeatedChars.replaceRepeatedChars(pureSrc, symbols));
         var openerList = wordList.stream().map(understandTarget::getAvailableToke).filter(Objects::nonNull).toList();
         if (openerList.isEmpty()) throw new PlmException("Fail to set the opening word", understandTarget.getRight());
         PlmException e = null;

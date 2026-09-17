@@ -1,26 +1,23 @@
-package root.service;
+package root.plm;
 
 import org.springframework.stereotype.Service;
 
-/**
- * @author Chat GPT
- */
 @Service
 public class ReplaceRepeatedChars {
-    void appendChars(StringBuilder sb, char ch, int count, char[] targets) {
+    private static void appendChars(StringBuilder sb, char ch, int count, char[] targets) {
         if (contains(targets, ch) && count >= 3) {
             sb.append(String.valueOf(ch).repeat(2)); // 2번만 추가
         } else {
             sb.append(String.valueOf(ch).repeat(count)); // 원래 개수만큼 추가
         }
     }
-    boolean contains(char[] arr, char target) {
+    private static boolean contains(char[] arr, char target) {
         for (char c : arr) {
             if (c == target) return true;
         }
         return false;
     }
-    public String replaceRepeatedChars(String input, char[] targets) {
+    public static String replaceRepeatedChars(String input, char[] targets) {
         StringBuilder sb = new StringBuilder();
 
         if (input.isEmpty()) return input;
