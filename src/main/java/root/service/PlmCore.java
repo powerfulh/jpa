@@ -224,7 +224,7 @@ public class PlmCore {
                 .forEach(box -> boxSentence(understand(box.src).get(0), box));
     }
 
-    void commitSentence(Sentence sentence, int usn) {
+    int commitSentence(Sentence sentence, final int usn) {
         var contextList = plmContextRepo.findAll();
         for (int i = 0; i < sentence.size() - 1; i++) {
             var context = new PlmUltronContext();
@@ -234,12 +234,13 @@ public class PlmCore {
             context.i = i * 2; // 사이에 집어 넣을 일 있을까봐..
             ultronContextRepo.save(context);
         }
+        return usn;
     }
     @Transactional
-    public void understandThenCommit(String pureSrc, boolean learnContext) {
+    public int understandThenCommit(String pureSrc, boolean learnContext) {
         Sentence sentence = understand(pureSrc).get(0);
         if(learnContext) learnSentence(sentence);
-        commitSentence(sentence, ultronSentenceRepo.save(new PlmUltronSentence(sentence.get(0).getN())).getN());
+        return commitSentence(sentence, ultronSentenceRepo.save(new PlmUltronSentence(sentence.get(0).getN())).getN());
     }
 }
 

@@ -21,12 +21,14 @@ public class Llm {
     final PlmCore plmCore;
     final AgentCore agentCore;
     final Repo dsl;
+    final Map<Integer, String> commitedSentence;
 
     public Llm(LlmWordRepo llmWordRepo, PlmCore plmCore, AgentCore agentCore, Repo dsl) {
         this.llmWordRepo = llmWordRepo;
         this.plmCore = plmCore;
         this.agentCore = agentCore;
         this.dsl = dsl;
+        commitedSentence = new HashMap<>();
     }
 
     @GetMapping("/{w}")
@@ -58,12 +60,18 @@ public class Llm {
         plmCore.reunderstand();
     }
     @PostMapping("/commit")
-    public void commit(String src, boolean learnContext) {
-        plmCore.understandThenCommit(src, learnContext);
+    public int commit(String src, boolean learnContext) {
+        final int sn = plmCore.understandThenCommit(src, learnContext);
+        commitedSentence.put(sn, src);
+        return sn;
     }
     @GetMapping("/unreadable")
     public List<PlmUnderstandBox> getUnreadable() {
         return dsl.selectUnreadable();
+    }
+    @GetMapping("/commited-sentence")
+    public Map<Integer, String> getCommitedSentence() {
+        return commitedSentence;
     }
 
     @GetMapping("/agent/task")
