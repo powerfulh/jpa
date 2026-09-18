@@ -3,10 +3,12 @@ package root.rest;
 import org.springframework.web.bind.annotation.*;
 import root.entity.agent.AgentTask;
 import root.entity.plm.LlmWord;
+import root.entity.plm.PlmContext;
 import root.entity.plm.PlmUltronSentence;
 import root.entity.plm.PlmUnderstandBox;
 import root.plm.Sentence;
 import root.repo.plm.LlmWordRepo;
+import root.repo.plm.PlmContextRepo;
 import root.repo.plm.dsl.Repo;
 import root.service.AgentCore;
 import root.service.PlmCore;
@@ -19,13 +21,15 @@ import java.util.Map;
 @RequestMapping("/llm")
 public class Llm {
     final LlmWordRepo llmWordRepo;
+    final PlmContextRepo contextRepo;
     final PlmCore plmCore;
     final AgentCore agentCore;
     final Repo dsl;
     final Map<Integer, String> commitedSentence;
 
-    public Llm(LlmWordRepo llmWordRepo, PlmCore plmCore, AgentCore agentCore, Repo dsl) {
+    public Llm(LlmWordRepo llmWordRepo, PlmContextRepo contextRepo, PlmCore plmCore, AgentCore agentCore, Repo dsl) {
         this.llmWordRepo = llmWordRepo;
+        this.contextRepo = contextRepo;
         this.plmCore = plmCore;
         this.agentCore = agentCore;
         this.dsl = dsl;
@@ -77,6 +81,10 @@ public class Llm {
     @PostMapping("/qa/{sn}/{target}")
     public PlmUltronSentence postQa(@PathVariable int sn, @PathVariable int target) {
         return plmCore.qa(sn, target);
+    }
+    @GetMapping("/context")
+    public List<PlmContext> getContext() {
+        return contextRepo.findByOrderByUpdatedDateDesc();
     }
 
     @GetMapping("/agent/task")
