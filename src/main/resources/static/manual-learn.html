@@ -234,6 +234,8 @@
           opacity: 1;
           transform: translateX(-50%) translateY(0);
         }
+
+		.hud-left { left: 20px; right: auto; }
     </style>
 </head>
 <body>
@@ -250,6 +252,11 @@
         <div class="hud-title"><span>최근 갱신 단어</span><span class="cnt" data-slot="hud-cnt"></span></div>
         <div data-slot="hud-body"><div class="empty">…</div></div>
     </aside>
+
+	<aside id="left-hud" class="hud hud-left">
+		<div class="hud-title"><span>첫 타스크 조정</span><span class="cnt" data-slot="lhud-cnt"></span></div>
+		<div data-slot="lhud-body"><div class="empty">…</div></div>
+	</aside>
 
 	<script>
 	const sentenceQuery = new URLSearchParams(location.search).get('s')
