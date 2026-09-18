@@ -101,9 +101,9 @@
           box-shadow: 0 0 8px rgba(81, 207, 102, 0.5);
         }
 
-        .lhud-row { cursor: pointer; }
-        .lhud-row:hover { background: rgba(77, 171, 247, 0.08); margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: 4px; }
-        .lhud-row.manual:hover { background: rgba(77, 171, 247, 0.22); }
+        .context-hud-row { cursor: pointer; }
+        .context-hud-row:hover { background: rgba(77, 171, 247, 0.08); margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: 4px; }
+        .context-hud-row.manual:hover { background: rgba(77, 171, 247, 0.22); }
 
         .actions {
           display: flex;
@@ -184,7 +184,7 @@
         .hud-meta { color: var(--muted); font-size: 10px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .hud-time { color: var(--muted); font-size: 10px; white-space: nowrap; flex-shrink: 0; }
 
-        .lhud-row {
+        .context-hud-row {
           display: flex;
           align-items: center;
           gap: 8px;
@@ -192,20 +192,20 @@
           border-bottom: 1px solid rgba(42, 42, 42, 0.55);
           font-size: 12px;
         }
-        .lhud-row:last-child { border-bottom: none; }
-        .lhud-op { color: var(--text); font-weight: 600; flex: 1; white-space: nowrap; }
-        .lhud-ctx { color: var(--accent); font-size: 10px; }
-        .lhud-via {
+        .context-hud-row:last-child { border-bottom: none; }
+        .context-hud-op { color: var(--text); font-weight: 600; flex: 1; white-space: nowrap; }
+        .context-hud-ctx { color: var(--accent); font-size: 10px; }
+        .context-hud-via {
           font-size: 9px; color: var(--muted);
           border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px;
           white-space: nowrap;
         }
-        .lhud-row.manual {
+        .context-hud-row.manual {
           background: rgba(77, 171, 247, 0.14);
           margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: 4px;
         }
-        .lhud-row.manual .lhud-op { color: #fff; }
-        .lhud-row.manual .lhud-via { color: var(--accent); border-color: var(--accent); font-weight: 700; }
+        .context-hud-row.manual .context-hud-op { color: #fff; }
+        .context-hud-row.manual .context-hud-via { color: var(--accent); border-color: var(--accent); font-weight: 700; }
 
         @media (max-width: 1300px) {
           .hud { display: none; }
@@ -253,9 +253,9 @@
         <div data-slot="hud-body"><div class="empty">…</div></div>
     </aside>
 
-	<aside id="left-hud" class="hud hud-left">
-		<div class="hud-title"><span>첫 타스크 조정</span><span class="cnt" data-slot="lhud-cnt"></span></div>
-		<div data-slot="lhud-body"><div class="empty">…</div></div>
+	<aside class="hud hud-left">
+		<div class="hud-title"><span>첫 타스크 조정</span><span class="cnt" data-slot="context-hud-cnt"></span></div>
+		<div data-slot="context-hud-body"><div class="empty">…</div></div>
 	</aside>
 
 	<script>
@@ -285,6 +285,7 @@
 		return card
 	}
 
+	let BEST_WORDS
 	async function fillUnderstand(card, slot, src, wordN) {
 		const target = card.querySelector(`[data-slot="${slot}"]`)
 		try {
@@ -292,6 +293,7 @@
 			if (!res.ok) { target.innerHTML = '<span class="empty">분해 실패</span>'; return }
 			const list = await res.json()
 			if (!list.length) { target.innerHTML = '<span class="empty">분해 후보 없음</span>'; return }
+			BEST_WORDS = list[0].list.map(item => item.n)
 			target.innerHTML = ''
 			list.forEach(item => {
 				const tokensItem = document.createElement('div')
@@ -310,6 +312,7 @@
 				tokensItem.appendChild(pointDiv)
 				target.appendChild(document.createElement('hr'))
 			})
+			loadLeftHud()
 		} catch (e) {
 			target.innerHTML = `<span class="empty">${e}</span>`
 		}
@@ -372,8 +375,8 @@
 	let COMPS = {}
 
 	function opLabel(op) {
-		const isNew = op.includes('NEW')
-		const kind = op.endsWith('CNT') ? 'cnt' : 'space'
+		const isNew = op.cnt + op.space == 1
+		const kind = op.cnt > op.space ? 'cnt' : 'space'
 		return (isNew ? '신규' : '증가') + ' ' + kind
 	}
 
@@ -429,6 +432,38 @@
             if(res.ok) showToast('True 커밋 완료')
         })
     }
+		async function loadLeftHud() {
+			const body = document.querySelector('[data-slot="context-hud-body"]')
+			const cnt = document.querySelector('[data-slot="context-hud-cnt"]')
+			clearCtxHl()
+			const [ctxRes, cpRes] = await Promise.all([
+				fetch('/llm/context'),
+				fetch('/jpaui/LlmWordCompound')
+			])
+			const ctxMap = {}
+			const ctxList = await ctxRes.json()
+			if (ctxRes.ok) for (const c of ctxList) ctxMap[c.n] = c
+			COMPS = {}
+			if (cpRes.ok) for (const c of await cpRes.json()) COMPS[c.word] = c
+			const rows = ctxList.slice(0, 25)
+			if (cnt) cnt.textContent = rows.length + '건'
+			if (!rows.length) { body.innerHTML = '<div class="empty">CONTEXT 조정 없음</div>'; return }
+			body.innerHTML = rows.map(c => {
+				const ctx = ctxMap[c.entityN] || {}
+				const manual = BEST_WORDS.includes(c.leftword) || BEST_WORDS.includes(c.rightword)
+				return `
+				<div class="context-hud-row${manual ? ' manual' : ''}" data-lw="${ctx.leftword ?? ''}" data-rw="${ctx.rightword ?? ''}">
+					<span class="context-hud-op">${esc(opLabel(c))}</span>
+					<span class="context-hud-ctx">#${c.n}</span>
+					<span class="context-hud-via">${c.leftword} | ${c.rightword}</span>
+				</div>`
+			}).join('')
+			body.querySelectorAll('.context-hud-row').forEach(row => {
+				const lw = Number(row.dataset.lw), rw = Number(row.dataset.rw)
+				row.addEventListener('mouseenter', () => highlightCtx(lw, rw))
+				row.addEventListener('mouseleave', clearCtxHl)
+			})
+		}
 	</script>
 </body>
 </html>
