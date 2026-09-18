@@ -299,12 +299,19 @@
 				const tokensItem = document.createElement('div')
 				tokensItem.className = 'tokens'
 				tokensItem.style.marginBottom = '8px'
+				const minContext = Math.min(...item.list.map(tk => tk.rightContext))
+				const maxContext = Math.max(...item.list.map(tk => tk.rightContext))
 				tokensItem.innerHTML = item.list.map((tk, i) => `
-					<span class="token${(tk.rightContext == 0 && i > 0) ? ' highlight' : ''}" data-n="${tk.n}" title="right context: ${tk.rightContext}">
-						<span class="w">${esc(tk.word)}</span>
-						<span class="n">${tk.n}</span>
-						<span class="meta">${esc(tk.type)}${tk.memo ? '·' + esc(tk.memo) : ''}</span>
-					</span>
+					<div>
+						<div>
+							<span class="token${(tk.rightContext == 0 && i > 0) ? ' highlight' : ''}" data-n="${tk.n}" title="right context: ${tk.rightContext}">
+								<span class="w">${esc(tk.word)}</span>
+								<span class="n">${tk.n}</span>
+								<span class="meta">${esc(tk.type)}${tk.memo ? '·' + esc(tk.memo) : ''}</span>
+							</span>
+						</div>
+						<progress value=${(tk.rightContext - minContext) / (maxContext - minContext)} style="display: block; appearance: none; height: 4px; width: 100%;" />
+					</div>
 				`).join('')
 				target.appendChild(tokensItem)
 				const pointDiv = document.createElement('div')
