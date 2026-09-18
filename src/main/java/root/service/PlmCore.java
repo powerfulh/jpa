@@ -242,6 +242,13 @@ public class PlmCore {
         if(learnContext) learnSentence(sentence);
         return commitSentence(sentence, ultronSentenceRepo.save(new PlmUltronSentence(sentence.get(0).getN())).getN());
     }
+
+    @Transactional
+    public PlmUltronSentence qa(int sn, int target) {
+        final var s = ultronSentenceRepo.findById(sn).orElseThrow();
+        if(s.target == null) s.target = target;
+        return s;
+    }
 }
 
 class LearnWord extends LlmWord {

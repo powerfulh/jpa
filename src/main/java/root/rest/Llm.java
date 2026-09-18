@@ -3,6 +3,7 @@ package root.rest;
 import org.springframework.web.bind.annotation.*;
 import root.entity.agent.AgentTask;
 import root.entity.plm.LlmWord;
+import root.entity.plm.PlmUltronSentence;
 import root.entity.plm.PlmUnderstandBox;
 import root.plm.Sentence;
 import root.repo.plm.LlmWordRepo;
@@ -72,6 +73,10 @@ public class Llm {
     @GetMapping("/commited-sentence")
     public Map<Integer, String> getCommitedSentence() {
         return commitedSentence;
+    }
+    @PostMapping("/qa/{sn}/{target}")
+    public PlmUltronSentence postQa(@PathVariable int sn, @PathVariable int target) {
+        return plmCore.qa(sn, target);
     }
 
     @GetMapping("/agent/task")
