@@ -23,7 +23,8 @@ public class StaticUtil {
                     var merge = new ArrayList<>(beforeMerge);
                     merge.addAll(item);
                     final var s = new Sentence(merge, contextList);
-                    if(s.contextPoint > sentenceList.get(sentenceList.size() - 1).contextPoint) sentenceList.add(s);
+//                    if(s.contextPoint > sentenceList.get(sentenceList.size() - 1).contextPoint) sentenceList.add(s);
+                    sentenceList.add(s);
                 });
                 return;
             }
