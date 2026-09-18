@@ -428,7 +428,10 @@
     function trueCommit({target}) {
         target.disabled = true
         fetch(`/llm/commit?src=${encodeURIComponent(sentenceQuery)}&learnContext=true`, {method: 'post'}).then(res => {
-            if(res.ok) showToast('True 커밋 완료')
+            if(res.ok) {
+            	showToast('True 커밋 완료')
+            	loadLeftHud()
+            }
         })
     }
 		async function loadLeftHud() {
