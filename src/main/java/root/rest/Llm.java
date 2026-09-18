@@ -80,6 +80,8 @@ public class Llm {
     }
     @PostMapping("/qa/{sn}/{target}")
     public PlmUltronSentence postQa(@PathVariable int sn, @PathVariable int target) {
+        commitedSentence.remove(sn);
+        commitedSentence.remove(target);
         return plmCore.qa(sn, target);
     }
     @GetMapping("/context")
