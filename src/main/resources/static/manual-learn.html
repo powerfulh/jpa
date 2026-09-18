@@ -392,7 +392,6 @@
 		document.querySelectorAll('.token.ctx-hl').forEach(t => t.classList.remove('ctx-hl'))
 	}
 
-	// 조정의 두 단어(context leftword/rightword)를 포함하는 첫 카드 토큰(결합이면 구성요소까지) 강조
 	function highlightCtx(lw, rw) {
 		clearCtxHl()
 		const card = document.querySelector('.task-card')
@@ -449,7 +448,7 @@
 			if (cnt) cnt.textContent = rows.length + '건'
 			if (!rows.length) { body.innerHTML = '<div class="empty">CONTEXT 조정 없음</div>'; return }
 			body.innerHTML = rows.map(c => {
-				const ctx = ctxMap[c.entityN] || {}
+				const ctx = ctxMap[c.n] || {}
 				const manual = BEST_WORDS.includes(c.leftword) || BEST_WORDS.includes(c.rightword)
 				return `
 				<div class="context-hud-row${manual ? ' manual' : ''}" data-lw="${ctx.leftword ?? ''}" data-rw="${ctx.rightword ?? ''}">
