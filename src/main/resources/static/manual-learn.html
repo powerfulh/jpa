@@ -304,7 +304,7 @@
 				tokensItem.innerHTML = item.list.map((tk, i) => `
 					<div>
 						<div>
-							<span class="token${(tk.rightContext == 0 && i > 0) ? ' highlight' : ''}" data-n="${tk.n}" title="right context: ${tk.rightContext}">
+							<span class="token${(tk.rightContext < 2 && i > 0) ? ' highlight' : ''}" data-n="${tk.n}" title="right context: ${tk.rightContext}">
 								<span class="w">${esc(tk.word)}</span>
 								<span class="n">${tk.n}</span>
 								<span class="meta">${esc(tk.type)}${tk.memo ? '·' + esc(tk.memo) : ''}</span>
