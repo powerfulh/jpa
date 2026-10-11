@@ -1,0 +1,1 @@
+ C:\Users\SOO_inc\.jdks\corretto-17.0.19\bin/java -jar /intellij/jpa/target/powerful-jpa-0.0.4.jar --MARIADBDOMAIN=abc --MARIADBPASSWORD=abc
